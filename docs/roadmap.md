@@ -51,7 +51,7 @@ Goal: establish region/provider availability and historical events.
 
 Current status: **complete pending merge (2026-08-17)**. Movie of the Night v4,
 provider mappings, all five lifecycle types, raw/normalized event persistence,
-idempotent current state, quota enforcement, replay/inspection, daily automation,
+idempotent current state, quota enforcement, replay/inspection, manual automation,
 and offline tests are implemented. Live Greece validation persisted 125 events
 across the five lifecycle types using six total requests.
 
@@ -73,7 +73,10 @@ Exit criteria:
 - historical events survive source-window changes;
 - no secrets appear in raw request metadata or logs.
 
-Exit criteria result: all passed with documented reconciliation limitations.
+Exit criteria result: lifecycle behavior passed with documented reconciliation
+limitations. Automatic daily scheduling is intentionally deferred until durable
+storage, monitoring, and a production API budget are available; the workflow is
+manual for now.
 See [v0.2 release notes](releases/v0.2.md).
 
 ## v0.3 — dbt and serving catalog

@@ -34,7 +34,7 @@ Version `v0.2` is complete pending merge. The repository currently includes:
 - TMDB watch-provider ingestion;
 - region/provider-scoped streaming lifecycle ingestion;
 - append-only lifecycle history and idempotent DuckDB availability state;
-- bounded daily ingestion automation;
+- bounded manual ingestion workflow;
 - append-only raw Parquet storage;
 - retrying and rate-limited HTTP access;
 - source-independent content and provider models;

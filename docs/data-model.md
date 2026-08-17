@@ -1,0 +1,226 @@
+# WatchPulse Data Model
+
+Status: proposed MVP contract. This document owns table grains, keys, field
+semantics, and historical behavior.
+
+## Modeling principles
+
+- `tmdb_id` is the canonical shared external content identifier when available.
+- Region and provider are mandatory dimensions of streaming availability.
+- Stable WatchPulse provider keys isolate the product from upstream IDs.
+- Raw, normalized, and serving data remain separate.
+- Lifecycle events are append-only and outlive upstream history windows.
+- New Releases and Recently Added use different dates and rules.
+- Upcoming content is never treated as currently available.
+
+## Layer overview
+
+```mermaid
+flowchart LR
+    RAW[Raw source payloads] --> STG[Typed staging models]
+    STG --> NORM[Normalized dimensions and facts]
+    NORM --> SERVE[catalog_availability]
+    SERVE --> API[Parameterized query layer]
+```
+
+## Raw layer
+
+Raw Parquet files preserve source responses close to verbatim. Common envelope
+fields are:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `fetched_at` | timestamp with timezone | When WatchPulse received the response |
+| `request_params` | JSON string | Non-secret request context |
+| `payload` | JSON string | Near-verbatim source response |
+
+Partitions include source, endpoint, entity type, country, and ingestion date.
+Raw batches are immutable; retries may produce duplicate observations that are
+deduplicated downstream.
+
+## Normalized models
+
+### `dim_content`
+
+Grain: one row per `tmdb_id` and `content_type`.
+
+| Field | Type | Rules |
+|---|---|---|
+| `tmdb_id` | bigint | Not null; part of primary key |
+| `content_type` | text | `movie` or `tv`; part of primary key |
+| `title` | text | Display title; not null |
+| `original_title` | text | Original movie/show name |
+| `overview` | text | Nullable |
+| `release_date` | date | Movie release or TV first-air date |
+| `runtime_minutes` | integer | Nullable; positive when present |
+| `original_language` | text | ISO-style language code when supplied |
+| `tmdb_rating` | decimal | Nullable; between 0 and 10 |
+| `vote_count` | integer | Non-negative |
+| `tmdb_popularity` | decimal | Nullable; non-negative |
+| `poster_path` | text | Nullable TMDB image path |
+| `backdrop_path` | text | Nullable TMDB image path |
+| `source_updated_at` | timestamp | Latest known source update |
+| `created_at` | timestamp | First normalized observation |
+| `updated_at` | timestamp | Latest normalized observation |
+
+Current descriptive values are stored here. Historical popularity and rating
+measurements belong in `title_daily_metrics` if required.
+
+### `content_genres`
+
+Grain: one row per content and genre.
+
+| Field | Type | Rules |
+|---|---|---|
+| `tmdb_id` | bigint | References `dim_content` |
+| `content_type` | text | References `dim_content` |
+| `genre_id` | integer | Source genre identifier |
+| `genre_name` | text | Normalized display name |
+
+Primary key: `tmdb_id`, `content_type`, `genre_id`.
+
+### `dim_provider`
+
+Grain: one row per stable WatchPulse provider.
+
+| Field | Type | Rules |
+|---|---|---|
+| `provider_key` | text | Primary key, for example `netflix` |
+| `provider_name` | text | User-facing name |
+| `is_active` | boolean | Whether WatchPulse currently supports it |
+
+The frontend and API use `provider_key`, never an upstream provider ID.
+
+### `provider_source_map`
+
+Grain: one row per provider, source, and optional region-specific mapping.
+
+| Field | Type | Rules |
+|---|---|---|
+| `provider_key` | text | References `dim_provider` |
+| `source` | text | Such as `tmdb` or `streaming_availability` |
+| `source_provider_id` | text | Upstream identifier stored as text |
+| `region` | text | Nullable ISO alpha-2 code if mapping varies by market |
+
+Primary key: `provider_key`, `source`, `source_provider_id`, `region` with a
+documented null-safe implementation in dbt.
+
+### `streaming_availability`
+
+Grain: one row per content, region, provider, and monetization type.
+
+| Field | Type | Rules |
+|---|---|---|
+| `tmdb_id` | bigint | References `dim_content` |
+| `content_type` | text | `movie` or `tv` |
+| `region` | text | ISO alpha-2; not null |
+| `provider_key` | text | References `dim_provider`; not null |
+| `monetization_type` | text | Subscription, free, ads, rent, or buy |
+| `available_since` | timestamp/date | When current availability began |
+| `available_from` | timestamp/date | Future arrival time for upcoming rows |
+| `expires_on` | timestamp/date | Nullable expected removal time |
+| `is_available` | boolean | True only for current availability |
+| `is_upcoming` | boolean | True only for announced future availability |
+| `source` | text | Lifecycle source |
+| `source_updated_at` | timestamp | Upstream update time when supplied |
+| `last_updated_at` | timestamp | Latest WatchPulse observation |
+
+Primary key: `tmdb_id`, `content_type`, `region`, `provider_key`,
+`monetization_type`.
+
+Required invariant: `is_available` and `is_upcoming` cannot both be true.
+
+### `streaming_events`
+
+Grain: one distinct lifecycle event reported or derived by WatchPulse.
+
+| Field | Type | Rules |
+|---|---|---|
+| `event_id` | text/UUID | Primary key; deterministic when possible |
+| `tmdb_id` | bigint | References content |
+| `content_type` | text | `movie` or `tv` |
+| `region` | text | ISO alpha-2; not null |
+| `provider_key` | text | References provider; not null |
+| `monetization_type` | text | Nullable if upstream event lacks it |
+| `event_type` | text | `new`, `removed`, `updated`, `expiring`, `upcoming` |
+| `event_date` | timestamp/date | Effective lifecycle time |
+| `available_from` | timestamp/date | Nullable announced arrival |
+| `expires_on` | timestamp/date | Nullable announced expiration |
+| `source` | text | Originating source |
+| `source_event_id` | text | Nullable upstream identity |
+| `ingested_at` | timestamp | WatchPulse receipt time |
+
+Update strategy: append-only with deterministic deduplication. Current upstream
+state never deletes old events.
+
+### `title_daily_metrics`
+
+Grain: one row per content and observation date.
+
+Fields include TMDB popularity, rating, vote count, and their derived changes.
+This model is optional until ranking requires historical momentum.
+
+### `pipeline_runs`
+
+Grain: one row per source/job execution.
+
+| Field | Type |
+|---|---|
+| `run_id` | text/UUID |
+| `job_name` | text |
+| `source` | text |
+| `started_at` | timestamp |
+| `finished_at` | timestamp |
+| `status` | text |
+| `api_request_count` | integer |
+| `rows_fetched` | integer |
+| `rows_inserted` | integer |
+| `rows_updated` | integer |
+| `rows_failed` | integer |
+| `error_message` | text, sanitized |
+
+Update strategy: insert at start, update the same row at completion/failure.
+Run records are retained for operational history.
+
+## Serving model
+
+### `catalog_availability`
+
+Grain: one content, region, provider, and monetization type serving row.
+
+It denormalizes fields needed by filters and title cards:
+
+```text
+tmdb_id, content_type, title, overview, release_date, runtime_minutes,
+original_language, genres, tmdb_rating, vote_count, popularity_score,
+region, provider_key, provider_name, monetization_type, available_since,
+available_from, expires_on, is_available, is_upcoming, poster_path,
+backdrop_path, source_updated_at, last_successful_refresh_at
+```
+
+The frontend never receives raw payload structures.
+
+## Discovery semantics
+
+All sections start from the same region, provider, content type, genre, runtime,
+release year, rating, and language filters.
+
+| Section | Required predicate | Date used |
+|---|---|---|
+| Top 10 | `is_available = true` | none |
+| New Releases | currently available and recent release | `release_date` |
+| Recently Added | currently available and recently added | `available_since` |
+| Leaving Soon | currently available and near expiration | `expires_on` |
+| Upcoming | future arrival and not currently available | `available_from` |
+
+## Required data tests
+
+- primary keys are unique and non-null;
+- all region values are valid configured ISO alpha-2 codes;
+- provider and content relationships are valid;
+- ratings, vote counts, and runtimes remain in valid ranges;
+- upcoming rows are not currently available;
+- removed events close current availability;
+- events are not deleted by later source snapshots;
+- New Release and Recently Added rules use their respective dates;
+- no discovery query leaks rows across region or provider boundaries.

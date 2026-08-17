@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "watchpulse"
+version = "0.1.0"
+description = "Region- and provider-aware streaming discovery data product"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "duckdb>=1.1",
+    "httpx>=0.27",
+    "pyarrow>=16.0",
+    "python-dotenv>=1.0",
+    "pytz>=2024.1",
+    "tenacity>=8.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "commitizen>=4.10,<5",
+    "detect-secrets>=1.5,<2",
+    "pre-commit>=4.0",
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[tool.setuptools.packages.find]
+include = ["ingestion*", "watchpulse*"]
+
+[tool.pytest.ini_options]
+testpaths = ["ingestion/tests", "tests"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version_provider = "pep621"
+tag_format = "v$version"
+version_scheme = "semver2"
+major_version_zero = true
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"

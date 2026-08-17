@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq

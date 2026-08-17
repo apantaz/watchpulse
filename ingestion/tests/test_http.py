@@ -20,6 +20,7 @@ def test_get_json_returns_payload_on_success() -> None:
 
     with _client(handler) as client:
         assert client.get_json("/thing") == {"ok": True}
+        assert client.request_count == 1
 
 
 def test_get_json_retries_on_5xx_then_succeeds() -> None:
@@ -33,6 +34,7 @@ def test_get_json_retries_on_5xx_then_succeeds() -> None:
 
     with _client(handler) as client:
         assert client.get_json("/thing") == {"ok": True}
+        assert client.request_count == 2
     assert calls["n"] == 2
 
 

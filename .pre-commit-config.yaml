@@ -1,0 +1,41 @@
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+  - commit-msg
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+        stages: [pre-commit]
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff check
+        entry: python -m ruff check
+        language: system
+        types: [python]
+        stages: [pre-commit]
+
+      - id: detect-secrets
+        name: Detect secrets
+        entry: detect-secrets-hook --baseline .secrets.baseline
+        language: system
+        types: [text]
+        stages: [pre-commit]
+
+      - id: pytest
+        name: Offline test suite
+        entry: python -m pytest -q
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: commitizen
+        name: Conventional commit message
+        entry: cz check --commit-msg-file
+        language: system
+        stages: [commit-msg]

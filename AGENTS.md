@@ -1,573 +1,1742 @@
-# AGENTS.md
+# AGENTS.md — WatchPulse
 
-## Project Goal
+## 1. Purpose
 
-Design the architecture for a production-minded data product that helps users discover the best new streaming releases available in their country across the streaming services they subscribe to.
+WatchPulse is a streaming discovery product.
 
-The initial market is Greece, but the architecture must be designed so that additional countries can be supported later without major redesign.
+Its core goal is to help a user answer:
 
-The core user problem is:
+> "What should I watch right now, on the streaming services I actually have, in my region?"
 
-> "I live in Greece, I subscribe to Netflix, Disney+, Prime Video, etc. What are the best new releases available to me this week, and what is actually worth watching?"
+The product is **not** a TV guide and should not include linear TV schedules in the current scope.
 
-This is not intended to be a generic movie/TV catalog or a JustWatch clone. The product should focus on curated discovery of newly available or newly released content.
+The product should combine:
 
----
+- streaming availability by region and provider,
+- movie/TV metadata,
+- dynamic filters,
+- ranked discovery sections,
+- and eventually natural-language discovery.
 
-## Product Principles
-
-1. New releases first.
-2. Country-aware availability.
-3. Provider-aware recommendations.
-4. Simple discovery instead of overwhelming catalog browsing.
-5. Explain why something is recommended.
-6. Preserve historical availability and ranking data rather than only current state.
-7. Start small, but design the architecture so it can evolve into a real public product.
+The first target is a clean, live, production-looking product that can be used as a real portfolio project and later evolved into a consumer product.
 
 ---
 
-## Initial User Experience
+# 2. Core Product Idea
 
-A user should eventually be able to select:
-
-- Country
-- Streaming providers they subscribe to
-- Optional content preferences
+A user selects a region and one or more streaming services.
 
 Example:
 
-- Country: Greece
-- Netflix
-- Disney+
-- Prime Video
+```text
+Region: Greecea
 
-The main experience should answer questions such as:
+Services:
+Netflix
+Disney+
+Prime Video
+```
 
-- What are the top releases this week?
-- What is a must-watch?
-- What is trending?
-- What are the best new movies?
-- What are the best new TV series?
-- What new episodes or seasons appeared?
-- What hidden gems were added?
-- What was newly added to my providers?
-- What content has recently become available in my country?
+The user can then dynamically refine the catalog using filters such as:
 
-Future extensions may include:
+```text
+Content type
+Genre
+Runtime
+Release year
+Rating
+Language
+```
 
-- Personalized recommendations
-- Watchlists
-- User viewing history
-- "I have 2 hours, what should I watch?"
-- Genre exclusions/preferences
-- Alerts/digests
-- Leaving-soon content
-- Historical provider availability
+All visible discovery sections must react to the same filters.
 
-Do not design all future features now, but do not create an architecture that blocks them.
+Initial sections:
 
----
+```text
+Top 10
+New Releases
+Recently Added
+Leaving Soon
+Upcoming
+```
 
-## Primary Data Source
+Later:
 
-TMDB should be treated as the initial external metadata source.
+```text
+New For You
+Natural-language discovery
+Personalized recommendations
+```
 
-Relevant types of data may include:
+Example natural-language query:
 
-- Movies
-- TV shows
-- Seasons
-- Episodes
-- Genres
-- People
-- Images
-- Popularity
-- Vote averages
-- Vote counts
-- Release dates
-- Content metadata
-- Watch providers
-- Country/region-specific availability
+> "Δεν είμαι καλά, θέλω μια ταινιούλα να γελάσω σήμερα στο Netflix."
 
-The architecture must account for the fact that external APIs represent current state and may not provide complete historical state.
+WatchPulse should interpret this as structured intent such as:
 
-We want to retain our own historical snapshots where useful.
+```json
+{
+  "provider": ["netflix"],
+  "content_type": "movie",
+  "mood": ["funny", "light", "uplifting"],
+  "avoid": ["dark", "depressing"]
+}
+```
 
-Do not assume TMDB is the only source forever.
+The LLM must **not** decide what is available on a provider.
 
-Design source abstraction so additional sources can be added later, such as:
-
-- IMDb-derived datasets where legally appropriate
-- Rotten Tomatoes or critic sources where API/licensing permits
-- JustWatch-compatible/provider availability sources
-- Streaming-platform-specific feeds
-- Editorial/manual curation
-- Other public entertainment datasets
-
-Do not introduce paid dependencies unless there is a strong reason.
+The application's local catalog is the source of truth for availability.
 
 ---
 
-## Important Domain Concepts
+# 3. Non-Negotiable Architecture Principle
 
-The architecture should clearly separate these concepts.
+External APIs are **ingestion sources**, not serving APIs.
 
-### Title
+User interactions must NEVER trigger external API calls.
 
-A movie or TV show.
+Correct architecture:
 
-Potential future extension:
+```text
+TMDB
+        \
+         \
+          -> Scheduled ingestion -> Local data layer -> Backend/query layer -> Frontend
+         /
+Streaming Availability API
+```
 
-- season
-- episode
+User interaction:
 
-### Provider
+```text
+User changes filters
+        ↓
+Backend builds a safe query
+        ↓
+Local serving dataset
+        ↓
+Results
+```
+
+Incorrect architecture:
+
+```text
+User changes filters
+        ↓
+TMDB request
+        ↓
+Streaming API request
+        ↓
+Results
+```
+
+Do not implement the incorrect architecture.
+
+---
+
+# 4. Technology Direction
+
+Initial preferred stack:
+
+```text
+Python
+DuckDB
+dbt
+Frontend framework of choice
+GitHub Actions
+```
+
+The repository should remain simple and portable.
+
+Avoid unnecessary infrastructure in the MVP.
+
+Do not introduce:
+
+```text
+Kubernetes
+Kafka
+Spark
+complex microservices
+heavy distributed infrastructure
+```
+
+unless a real requirement appears later.
+
+DuckDB is acceptable for the initial implementation and portfolio-scale serving.
+
+Keep boundaries clean so the serving database can later be replaced without rewriting the entire application.
+
+---
+
+# 5. External Data Sources
+
+## 5.1 TMDB
+
+TMDB is the primary source for content identity and general metadata.
+
+Use TMDB for:
+
+```text
+tmdb_id
+title
+original_title
+content_type
+overview
+release_date
+genres
+runtime
+original_language
+poster_path
+backdrop_path
+cast
+director / creators
+TMDB rating
+vote count
+TMDB popularity
+```
+
+Use `tmdb_id` as the canonical external content identifier whenever possible.
+
+TMDB may also be used for current provider/catalog discovery when useful.
+
+Do not expose raw TMDB response structures directly to the frontend.
+
+Transform TMDB data into internal models first.
+
+---
+
+## 5.2 Streaming Availability API
+
+Use the Streaming Availability API for streaming lifecycle data.
+
+Relevant concepts include:
+
+```text
+country / region
+provider
+availability type
+availableSince
+expiration information
+new
+removed
+updated
+expiring
+upcoming
+```
+
+Use its changes endpoint where appropriate.
+
+The application should ingest changes on a schedule and persist them.
+
+Important:
+
+The upstream API may expose only a limited historical window.
+
+Therefore WatchPulse must maintain its own historical event table.
+
+---
+
+# 6. Region
+
+Region is a first-class dimension.
+
+The product must support multiple regions without redesigning the schema.
+
+Use standardized country codes where possible.
 
 Examples:
 
-- Netflix
-- Disney+
-- Prime Video
-- Apple TV+
+```text
+GR
+US
+GB
+DE
+FR
+IT
+ES
+```
 
-### Country / Market
+Do not hardcode the application around Greece.
 
-Examples:
+The user's selected region determines:
 
-- GR
-- GB
-- DE
-- US
+- which services are relevant,
+- which titles are available,
+- which titles are newly added,
+- which titles are leaving,
+- and which upcoming titles are relevant.
 
-Availability must be country-aware.
+---
 
-### Streaming Availability
+# 7. Streaming Providers
 
-A relationship between:
+Users should be able to select one or multiple providers.
 
-- title
-- provider
-- country
-- availability type
-- observed time
+Example:
 
-We want to be able to identify when availability changes.
+```text
+Netflix       ✓
+Disney+       ✓
+Prime Video   ✓
+Apple TV+     ○
+Mubi          ○
+```
 
-Potential availability types:
+The provider list should be region-aware.
 
-- subscription
-- free
-- ads
-- rent
-- buy
+Provider IDs from upstream APIs should be mapped into stable internal provider identifiers.
 
-The main product should initially prioritize subscription streaming.
+Do not let the frontend depend on an upstream provider ID that may change between sources.
 
-### Release
+Recommended internal shape:
 
-A content release event.
+```text
+provider_key = netflix
+provider_name = Netflix
+```
 
-Do not assume a single global `release_date` is sufficient.
+---
 
-Different release concepts may exist:
+# 8. Global Filters
 
-- original premiere
-- theatrical release
-- digital release
-- streaming availability
-- season release
-- episode air date
+All filters must operate locally against WatchPulse-owned data.
 
-The architecture should define what the product means by "new this week."
+Initial global filters:
 
-### Ranking / Recommendation
+```text
+region
+provider
+content_type
+genre
+runtime
+release_year
+minimum_rating
+language
+```
 
-The product should calculate its own ranking rather than simply sorting by TMDB rating.
+Possible future filters:
+
+```text
+cast
+director
+certification
+keyword
+original language
+minimum vote count
+mood
+```
+
+Example:
+
+```text
+Region: Greece
+
+Providers:
+Netflix
+Disney+
+
+Content type:
+Movie
+
+Genre:
+Science Fiction
+
+Runtime:
+<= 120 minutes
+
+Rating:
+>= 7.0
+```
+
+Changing filters must only change the local query.
+
+It must NOT trigger TMDB or Streaming Availability API calls.
+
+---
+
+# 9. Shared Filter Universe
+
+All discovery sections must operate on the same active filtered universe.
+
+Example active state:
+
+```text
+region = GR
+providers = Netflix, Disney+
+content_type = movie
+genre = Science Fiction
+runtime <= 120
+rating >= 7
+```
+
+Then all sections should respect those constraints:
+
+```text
+Top 10
+New Releases
+Recently Added
+Leaving Soon
+Upcoming
+New For You
+```
+
+Do not implement each section as an isolated product with separate filter behavior.
+
+---
+
+# 10. Top 10
+
+Top 10 means WatchPulse's own ranking.
+
+It does NOT mean the official Netflix Top 10.
+
+Initial implementation may use TMDB popularity.
+
+Conceptually:
+
+```sql
+SELECT *
+FROM serving_catalog
+WHERE <global_filters>
+  AND is_available = TRUE
+ORDER BY popularity_score DESC
+LIMIT 10;
+```
+
+The ranking model must be replaceable later.
+
+Possible future ranking inputs:
+
+```text
+TMDB popularity
+TMDB rating
+vote count
+release recency
+availability recency
+user preference score
+WatchPulse engagement
+```
+
+Do not tightly couple UI code to the exact ranking formula.
+
+---
+
+# 11. New Releases
+
+New Releases means recently released content.
+
+This is based on the movie/show release date, not the date it entered a streaming service.
+
+Example:
+
+```text
+Movie release date: July 2026
+Added to Netflix: August 2026
+```
+
+This title is a New Release because the content itself is new.
+
+Initial configurable definition:
+
+```text
+release_date >= current_date - 90 days
+```
+
+Possible ranking:
+
+```text
+release recency
+popularity
+rating
+vote count
+```
+
+Keep the threshold configurable.
+
+---
+
+# 12. Recently Added
+
+Recently Added is different from New Releases.
+
+Example:
+
+```text
+Titanic
+Original release: 1997
+Added to Netflix Greece: 2026-08-15
+```
+
+Then:
+
+```text
+Recently Added = YES
+New Release = NO
+```
+
+Use:
+
+```text
+available_since
+or upstream "new" events
+```
+
+Conceptually:
+
+```sql
+SELECT *
+FROM serving_catalog
+WHERE <global_filters>
+  AND available_since >= current_date - INTERVAL '30 days'
+ORDER BY available_since DESC;
+```
+
+Keep the recent window configurable.
+
+---
+
+# 13. Leaving Soon
+
+Show content that is currently available but expected to leave soon.
+
+Example:
+
+```text
+Blade Runner 2049
+Netflix
+Leaving in 5 days
+```
+
+Use expiration data / `expiring` events when available.
+
+Conceptually:
+
+```sql
+WHERE is_available = TRUE
+  AND expires_on BETWEEN current_date
+                     AND current_date + INTERVAL '30 days'
+ORDER BY expires_on ASC;
+```
+
+Keep the window configurable.
+
+---
+
+# 14. Upcoming
+
+Show titles expected to arrive on a streaming platform soon.
+
+Conceptually:
+
+```sql
+WHERE available_from > current_date
+ORDER BY available_from ASC;
+```
+
+Use upstream `upcoming` events when available.
+
+Upcoming titles may not yet be part of the currently available catalog.
+
+Keep upcoming state distinct from currently available state.
+
+---
+
+# 15. New For You
+
+This is a later-stage personalization feature.
+
+The MVP does not require sophisticated machine learning.
+
+Start with a deterministic score.
 
 Potential signals:
 
-- rating quality
-- vote count
-- popularity
-- recency
-- popularity momentum
-- genre
-- provider
-- country
-- release freshness
-- editorial signals
-- user preferences later
+```text
+genre preference
+provider preference
+TMDB popularity
+TMDB rating
+vote count
+release recency
+availability recency
+language preference
+```
 
-The ranking should be explainable.
+Conceptually:
 
-Example output:
+```text
+recommendation_score =
+    genre_match_score
+  + popularity_score
+  + rating_score
+  + preferred_provider_bonus
+  + recency_bonus
+```
 
-- Must Watch
-- Worth Watching
-- Trending
-- Hidden Gem
+The recommendation engine must be replaceable independently of the frontend.
 
-Do not implement an opaque ML system for the first version.
+Later versions may use:
 
----
-
-## Data Engineering Requirements
-
-The architecture should demonstrate serious data engineering and analytics engineering practices.
-
-Consider:
-
-- API ingestion
-- incremental ingestion
-- idempotency
-- retries
-- rate limits
-- schema evolution
-- raw data preservation
-- history tracking
-- snapshots
-- deduplication
-- source freshness
-- data quality checks
-- orchestration
-- observability
-- lineage
-- reproducibility
-- local development
-- production deployment
-
-Avoid unnecessary enterprise complexity.
-
-The initial system should be able to run cheaply or for free.
+```text
+watched history
+likes
+dislikes
+saved titles
+clicks
+semantic similarity
+embeddings
+collaborative filtering
+```
 
 ---
 
-## Analytics Engineering Requirements
+# 16. Authentication and User Memory
 
-The transformed data layer should have clearly defined grains.
+Do NOT make login mandatory for basic discovery.
 
-Possible entities/models to consider:
+Initial product should work without an account.
 
-- dim_title
-- dim_movie
-- dim_tv_show
-- dim_provider
-- dim_country
-- dim_genre
-- dim_person
+Guest users can use:
 
-- fct_streaming_availability
-- fct_release
-- fct_title_daily_metrics
-- fct_ranking
-- fct_provider_catalog_snapshot
+```text
+region
+provider selection
+filters
+Top 10
+New Releases
+Recently Added
+Leaving Soon
+Upcoming
+```
 
-Potential marts:
+Guest preferences may be stored locally in the browser.
 
-- mart_weekly_releases
-- mart_must_watch
-- mart_trending
-- mart_hidden_gems
-- mart_provider_weekly_summary
+Example:
 
-These names are suggestions, not requirements.
+```json
+{
+  "region": "GR",
+  "providers": ["netflix", "disney-plus"],
+  "runtime_max": 120
+}
+```
 
-The agent should determine the correct modeling strategy.
+Login can be introduced later for persistent personalization.
 
-For every proposed fact table, document:
+Logged-in features may include:
 
-- Grain
-- Primary key
-- Important dimensions
-- Measures
-- Update strategy
-- Historical behavior
+```text
+watched
+liked
+disliked
+saved
+not interested
+persistent preferences
+cross-device profile
+```
 
----
+Core principle:
 
-## History Requirement
-
-Historical tracking is important.
-
-Examples of questions the future system should be able to answer:
-
-- When did title X first become available on Netflix Greece?
-- Was title X removed and later re-added?
-- How long was it available?
-- Which titles were added this week?
-- Which provider added the most highly rated content this month?
-- How did a title's popularity evolve after release?
-- What was ranked #1 last Friday?
-
-Do not overwrite all previous states.
-
-The architecture should explicitly define which data is:
-
-- append-only
-- snapshot-based
-- slowly changing
-- current-state only
+> No login required to discover.
+> Login required to remember.
 
 ---
 
-## Recommended Technology Philosophy
+# 17. Natural-Language Discovery
 
-Prefer open-source and low-cost tools.
+Natural-language discovery is an important future differentiator.
 
-The architecture should evaluate, rather than blindly adopt, technologies such as:
+Example:
 
-- Python
-- DuckDB
-- PostgreSQL
-- dbt
-- dbt-duckdb or dbt-postgres
-- Parquet
-- object storage
-- GitHub Actions
-- lightweight orchestration
-- FastAPI
-- Streamlit
-- Next.js or another frontend
-- Docker
+> "Έχω 90 λεπτά και θέλω κάτι χαλαρό στο Netflix."
 
-Do not assume Snowflake, BigQuery, Databricks, Airflow, Kafka, Kubernetes, or paid SaaS are required.
+The system should extract intent and constraints.
 
-If recommending heavier infrastructure, explain exactly why.
+Example:
 
-The initial project should be realistic for one developer.
+```json
+{
+  "provider": ["netflix"],
+  "runtime_max": 90,
+  "mood": ["light", "relaxing"]
+}
+```
+
+Then the application should query its own local serving dataset.
+
+Correct flow:
+
+```text
+User prompt
+    ↓
+LLM intent parser
+    ↓
+structured filters / semantic preferences
+    ↓
+local query engine
+    ↓
+real available candidates
+    ↓
+ranking
+    ↓
+optional LLM explanation
+```
+
+Incorrect flow:
+
+```text
+User prompt
+    ↓
+LLM invents movie recommendations and availability
+```
+
+Do not implement the incorrect flow.
 
 ---
 
-## Architecture Constraints
+# 18. LLM Cost and Abuse Controls
 
-The first version should:
+The AI feature must be bounded.
 
-- Be runnable locally.
-- Be deployable cheaply.
-- Support Greece first.
-- Support multiple streaming providers.
-- Preserve useful historical data.
-- Support daily ingestion.
-- Support weekly rankings.
-- Have a clean analytical model.
-- Allow a future public API/frontend.
-- Avoid vendor lock-in where practical.
+Do NOT implement an unrestricted general-purpose chatbot.
 
-The architecture must support scaling to more countries later.
+Treat AI as a natural-language query interface.
+
+Recommended controls:
+
+```text
+max prompt length
+per-session rate limit
+per-user rate limit
+per-IP rate limit where practical
+daily global request cap
+daily spend cap
+usage logging
+kill switch
+```
+
+Guests may have stricter limits than authenticated users.
+
+Example conceptual limits:
+
+```text
+Guest:
+5-10 AI searches/day
+
+Logged-in:
+20-30 AI searches/day
+```
+
+Keep actual values configurable.
+
+Do not expose LLM API keys to the browser.
+
+All LLM calls must go through the backend.
+
+---
+
+# 19. LLM Usage Monitoring
+
+Track every AI request.
+
+Recommended model:
+
+```text
+llm_usage
+
+request_id
+anonymous_session_id
+user_id
+model
+input_tokens
+output_tokens
+estimated_cost
+intent
+status
+created_at
+```
+
+Important metrics:
+
+```text
+AI requests today
+AI requests this month
+input tokens
+output tokens
+daily cost
+monthly cost
+cost per AI search
+cost per active user
+rate-limited requests
+unsupported intents
+errors
+```
+
+Implement a global kill switch so AI can be disabled while the rest of WatchPulse continues to work.
+
+The product must remain useful without AI.
+
+---
+
+# 20. Unsupported AI Requests
+
+If a user asks something unrelated to streaming discovery, WatchPulse should not become a general chatbot.
+
+Example:
+
+```text
+"What is the capital of France?"
+```
+
+Return an application-level unsupported intent.
+
+Example:
+
+```json
+{
+  "intent": "unsupported"
+}
+```
+
+UI can respond with a short message such as:
+
+> I can help you find something to watch.
+
+Do not spend multiple LLM turns having unrelated conversations.
+
+---
+
+# 21. Suggested Data Model
+
+Exact schemas can evolve.
+
+Keep raw/staging, normalized, and serving layers conceptually separate.
+
+---
+
+## 21.1 dim_content
+
+```text
+tmdb_id
+content_type
+title
+original_title
+overview
+release_date
+runtime_minutes
+original_language
+tmdb_rating
+vote_count
+tmdb_popularity
+poster_path
+backdrop_path
+created_at
+updated_at
+```
+
+---
+
+## 21.2 content_genres
+
+```text
+tmdb_id
+genre_id
+genre_name
+```
+
+---
+
+## 21.3 dim_provider
+
+```text
+provider_key
+provider_name
+source_provider_id
+source_name
+```
+
+If multiple upstream sources are eventually used, prefer a proper mapping model rather than one overloaded source ID column.
+
+---
+
+## 21.4 streaming_availability
+
+```text
+tmdb_id
+region
+provider_key
+monetization_type
+available_since
+expires_on
+is_available
+source
+last_updated_at
+```
+
+Recommended natural grain:
+
+```text
+one row per
+tmdb_id
++ region
++ provider
++ monetization type
+```
+
+unless the source requires a more detailed grain.
+
+---
+
+## 21.5 streaming_events
+
+```text
+event_id
+tmdb_id
+region
+provider_key
+event_type
+event_date
+source
+ingested_at
+```
+
+Possible event types:
+
+```text
+new
+removed
+updated
+expiring
+upcoming
+```
+
+Do not delete historical events simply because the upstream API no longer returns them.
+
+---
+
+# 22. Serving Layer
+
+The frontend should query application-owned serving models.
+
+A possible serving model:
+
+```text
+catalog_availability
+```
+
+Possible fields:
+
+```text
+tmdb_id
+title
+content_type
+
+region
+provider_key
+provider_name
+
+release_date
+runtime_minutes
+original_language
+genres
+
+tmdb_rating
+vote_count
+popularity_score
+
+available_since
+expires_on
+
+is_available
+is_upcoming
+
+poster_path
+backdrop_path
+```
+
+Do not make the frontend understand raw TMDB or streaming-provider payloads.
+
+---
+
+# 23. Query Layer
+
+Filters should be converted into controlled backend queries.
+
+Example request:
+
+```text
+Region: GR
+Provider: Netflix
+Content type: movie
+Genre: Thriller
+Runtime <= 100
+Rating >= 7
+```
+
+Conceptually:
+
+```sql
+SELECT *
+FROM catalog_availability
+WHERE region = ?
+  AND provider_key = ?
+  AND content_type = ?
+  AND runtime_minutes <= ?
+  AND tmdb_rating >= ?
+  AND genre = ?
+  AND is_available = TRUE
+ORDER BY popularity_score DESC
+LIMIT 10;
+```
+
+Use safe, parameterized queries.
+
+Do not build raw SQL by concatenating untrusted user input.
+
+---
+
+# 24. Daily Ingestion Strategy
+
+External APIs should be called on a schedule.
+
+Initial target:
+
+```text
+Streaming availability refresh:
+once per day
+
+Streaming changes ingestion:
+once per day
+
+TMDB metadata enrichment:
+incremental / as needed
+```
+
+Avoid repeatedly fetching metadata that is already current.
+
+Use incremental ingestion whenever practical.
+
+---
+
+# 25. Historical Availability
+
+WatchPulse should gradually build its own history.
+
+Example:
+
+```text
+tmdb_id = 597
+region = GR
+provider = netflix
+event_type = new
+event_date = 2026-08-15
+```
+
+Later:
+
+```text
+tmdb_id = 597
+region = GR
+provider = netflix
+event_type = removed
+event_date = 2027-03-12
+```
+
+The local event history should outlive upstream historical windows.
+
+This data can later power:
+
+```text
+Recently Added
+historical availability
+provider churn
+catalog analysis
+recommendation signals
+```
+
+---
+
+# 26. API Cost Principle
+
+External API usage should scale mainly with:
+
+```text
+number of ingestion jobs
+number of supported regions
+number of supported providers
+number of new/changed titles
+```
+
+It should NOT scale directly with:
+
+```text
+number of users
+page views
+filter changes
+frontend interactions
+```
+
+A user changing runtime from 120 to 90 minutes must cost zero external API calls.
+
+---
+
+# 27. Frontend Product Shape
+
+Possible homepage structure:
+
+```text
+--------------------------------------------------
+
+Region: Greece ▼
+
+Netflix ✓
+Disney+ ✓
+Prime Video ○
+Apple TV+ ○
+
+--------------------------------------------------
+
+Ask WatchPulse
+
+"What are you in the mood for?"
+[________________________________________]
+
+--------------------------------------------------
+
+Genre
+All | Action | Comedy | Drama | Thriller | Sci-Fi
+
+Runtime
+Any | <90m | <120m | Custom
+
+Type
+Movies | Series | Both
+
+Rating
+Any | 6+ | 7+ | 8+
+
+--------------------------------------------------
+
+TOP 10
+
+[1] [2] [3] [4] [5] ...
+
+--------------------------------------------------
+
+NEW RELEASES
+
+[poster] [poster] [poster] ...
+
+--------------------------------------------------
+
+RECENTLY ADDED
+
+[poster] [poster] [poster] ...
+
+--------------------------------------------------
+
+LEAVING SOON
+
+[poster] [poster] [poster] ...
+
+--------------------------------------------------
+
+COMING SOON
+
+[poster] [poster] [poster] ...
+
+--------------------------------------------------
+```
+
+All sections must respond to active filters.
+
+Natural-language discovery may alter the active filter state.
+
+Where helpful, show the interpreted constraints as removable chips.
+
+Example:
+
+```text
+Netflix ×
+Movie ×
+Funny ×
+Light ×
+< 120 min ×
+```
+
+---
+
+# 28. Product Differentiation
+
+Do not try to beat JustWatch at being a giant "where to watch" catalog.
+
+WatchPulse should move toward:
+
+> A decision engine for what to watch.
+
+Core product promise:
+
+> Tell WatchPulse what you feel like watching.
+> It will search what is actually available on your services in your region.
+
+The natural-language layer should translate human intent into structured discovery.
+
+Examples:
+
+```text
+"I have 90 minutes and want something light on Disney+."
+
+"I want a thriller but nothing too scary."
+
+"Something like Interstellar but shorter."
+
+"I feel awful and just want something stupid and funny on Netflix."
+
+"Find me a good non-American movie on Netflix."
+```
+
+The local catalog remains the source of truth.
+
+---
+
+# 29. SEO-Friendly Routing
+
+Keep URLs clean and potentially indexable.
+
+Possible routes:
+
+```text
+/
+ /discover
+ /new
+ /leaving-soon
+ /upcoming
+
+ /gr/netflix
+ /gr/netflix/new
+ /gr/netflix/leaving-soon
+
+ /us/netflix/new
+ /gb/disney-plus/new
+
+ /movie/597-titanic
+```
+
+Region/provider pages may become valuable for SEO later.
+
+Do not prematurely build a complicated SEO system, but keep routing compatible with it.
+
+---
+
+# 30. Portfolio Goal
+
+WatchPulse should be a real live product that can be shown to recruiters and hiring managers.
+
+The project should demonstrate:
+
+```text
+API ingestion
+incremental processing
+data modeling
+dbt
+DuckDB
+history tracking
+serving-layer design
+dynamic querying
+backend design
+frontend integration
+CI/CD
+testing
+monitoring
+cost-awareness
+AI integration
+```
+
+Prioritize:
+
+```text
+live URL
+clean UI
+working flows
+good README
+architecture diagram
+tests
+CI/CD
+clear technical decisions
+```
+
+Five polished features are better than twenty unfinished ones.
+
+---
+
+# 31. MVP Scope
+
+The initial public version should prioritize the following.
+
+## Data
+
+```text
+TMDB integration
+Streaming Availability API integration
+region support
+provider support
+daily ingestion
+DuckDB storage
+dbt transformations
+historical streaming events
+```
+
+## Filters
+
+```text
+region
+provider
+movie / series
+genre
+runtime
+release year
+minimum rating
+```
+
+## Sections
+
+```text
+Top 10
+New Releases
+Recently Added
+Leaving Soon
+Upcoming
+```
+
+## Frontend
+
+```text
+clean region selector
+provider selection
+dynamic filters
+responsive rails/cards
+content details
+no login requirement
+```
+
+## Engineering
+
+```text
+tests
+CI
+scheduled ingestion
+error handling
+logging
+basic monitoring
+```
+
+---
+
+# 32. Explicitly Out of Scope for MVP
+
+Do not build these unless the core product is already working:
+
+```text
+Greek TV schedules
+linear TV channels
+complex user accounts
+social features
+comments
+chat rooms
+native mobile apps
+advanced collaborative filtering
+vector databases unless truly needed
+complex ML pipelines
+microservices
+Kubernetes
+real-time streaming ingestion
+payments
+subscriptions
+advertising
+affiliate systems
+```
+
+Natural-language discovery can be introduced after the deterministic discovery experience works.
+
+If AI is introduced early, keep it strictly bounded as described above.
+
+---
+
+# 33. Coding Principles
+
+Prefer code that is:
+
+```text
+simple
+typed where practical
+testable
+modular
+source-independent
+observable
+incremental
+easy to replace
+```
+
+Prefer small modules with clear responsibilities.
+
+Keep:
+
+```text
+API clients
+source adapters
+transformations
+database access
+query building
+business ranking logic
+frontend code
+```
+
+separate.
+
+Do not bury business rules inside UI components.
+
+---
+
+# 34. Source Independence
+
+Keep source-specific mappings isolated.
+
+Example:
+
+```text
+TMDB API
+    ↓
+TMDB adapter
+    ↓
+internal content model
+```
+
+and:
+
+```text
+Streaming Availability API
+    ↓
+Streaming adapter
+    ↓
+internal availability model
+```
+
+The rest of the application should depend on the internal models.
+
+If the streaming provider is replaced later, frontend and recommendation logic should require minimal changes.
+
+---
+
+# 35. Configuration
+
+Do not hardcode operational values.
+
+Use configuration/environment variables for:
+
+```text
+API keys
+default region
+supported regions
+supported providers
+recently-added window
+new-release window
+leaving-soon window
+API base URLs
+AI model
+AI daily budget
+AI rate limits
+database path
+```
+
+Commit an example environment file.
+
+Do not commit secrets.
+
+---
+
+# 36. Observability
+
+At minimum, scheduled jobs should expose/log:
+
+```text
+run start
+run end
+status
+source
+rows fetched
+rows inserted
+rows updated
+rows failed
+API request count
+runtime
+error message
+```
+
+Failures should be visible.
+
+A broken daily ingestion must not silently leave stale data forever.
+
+Consider persisting pipeline-run metadata.
+
+---
+
+# 37. Data Freshness
+
+The UI should eventually know when data was last refreshed.
+
+Useful internal fields:
+
+```text
+source_updated_at
+ingested_at
+last_successful_refresh_at
+```
+
+Do not pretend data is real-time if it is refreshed daily.
+
+---
+
+# 38. Testing Expectations
+
+Add tests for important business behavior.
+
+Examples:
+
+```text
+New Release != Recently Added
+
+removed titles are not currently available
+
+upcoming titles are not treated as available
+
+region filtering never leaks titles from another region
+
+provider filtering works correctly
+
+runtime boundaries behave correctly
+
+global filters apply consistently across sections
+
+historical events are preserved
+
+query builder does not allow raw SQL injection
+```
+
+Add unit tests for source adapters and ranking logic.
+
+Use fixtures for external API responses.
+
+Do not require live API calls in the normal test suite.
+
+---
+
+# 39. CI/CD
+
+The repository should eventually have CI that checks at least:
+
+```text
+formatting
+linting
+tests
+dbt parsing/build where practical
+```
+
+Deployment should be reproducible.
+
+Scheduled ingestion should be automated.
+
+GitHub Actions is acceptable for the initial setup.
+
+---
+
+# 40. Performance Principles
 
 Do not prematurely optimize for millions of users.
 
----
+For MVP:
 
-## MVP Scope
+```text
+correctness
+simplicity
+fast local queries
+clean boundaries
+```
 
-The first usable version should focus on:
+matter more.
 
-1. Greece.
-2. Movies and TV shows.
-3. A small number of major providers.
-4. Daily ingestion.
-5. Historical availability tracking.
-6. Weekly release identification.
-7. Basic deterministic ranking.
-8. A simple consumption layer.
+However:
 
-Example MVP output:
+- avoid N+1 external API patterns,
+- avoid one external request per frontend interaction,
+- batch or cache upstream metadata where practical,
+- precompute serving-friendly fields where useful,
+- avoid unnecessary repeated transformations.
 
-> Greece — This Week
-
-- Top 5 Must-Watch Releases
-- New on Netflix
-- New on Disney+
-- New on Prime Video
-- Trending
-- Hidden Gems
-
-Do not include authentication, social features, complex personalization, payments, or machine learning in the MVP architecture unless there is a compelling architectural dependency.
+If scale later requires a different serving database, replace the serving layer without changing the product contract.
 
 ---
 
-## Ranking Requirements
+# 41. Security
 
-Design a ranking framework, but do not over-engineer it.
+Never expose external API secrets or LLM API keys to the frontend.
 
-A first version could use signals such as:
+Use backend-only secrets.
 
-- normalized rating
-- vote confidence
-- popularity
-- popularity change
-- recency
-- release relevance
-- genre weighting
+Validate user input.
 
-The system should avoid obvious ranking failures such as:
+Use parameterized SQL.
 
-- 10.0 rating from 3 votes beating 8.2 from 20,000 votes
-- old catalog titles dominating "new this week"
-- duplicated movie/provider entries
-- rental availability appearing as subscription availability
+Add rate limiting before exposing AI endpoints publicly.
 
-The ranking logic should be stored and versioned in the analytics layer where possible.
+Do not log secrets.
 
 ---
 
-## Data Quality
+# 42. Development Order
 
-The proposed architecture should include tests for cases such as:
+Preferred implementation sequence:
 
-- duplicate titles
-- duplicate provider availability
-- missing provider IDs
-- invalid country codes
-- impossible dates
-- availability records without a title
-- unknown monetization types
-- unexpected drops in ingested titles
-- stale ingestion
-- null critical identifiers
-- ranking output containing unavailable content
+## Phase 1 — Foundation
 
-Tests should be divided into:
+```text
+repository structure
+configuration
+DuckDB
+TMDB client
+basic models
+tests
+```
 
-- source checks
-- transformation checks
-- business-rule checks
+## Phase 2 — Streaming availability
 
----
+```text
+Streaming Availability API client
+provider mappings
+region-aware availability
+daily ingestion
+historical events
+```
 
-## Repository Design
+## Phase 3 — dbt / serving layer
 
-Propose a clean repository structure.
+```text
+normalized models
+serving catalog
+quality tests
+```
 
-The repository may eventually contain:
+## Phase 4 — Frontend discovery
 
-- ingestion code
-- dbt project
-- API
-- frontend
-- infrastructure
-- tests
-- documentation
+```text
+region selector
+provider selection
+genre filter
+runtime filter
+rating filter
+Top 10
+New Releases
+Recently Added
+Leaving Soon
+Upcoming
+```
 
-Do not create the full implementation yet.
+## Phase 5 — Deployment
 
-First produce a repository architecture and explain ownership/boundaries between components.
+```text
+live URL
+scheduled jobs
+monitoring
+CI/CD
+README
+architecture diagram
+```
 
----
+## Phase 6 — Natural language
 
-## Documentation Expectations
+```text
+bounded AI intent parser
+structured filters
+query execution
+usage limits
+cost monitoring
+kill switch
+```
 
-The architecture should produce clear documentation for:
+## Phase 7 — Personalization
 
-- system context
-- components
-- data flow
-- storage
-- ingestion
-- transformations
-- serving
-- deployment
-- observability
-- security
-- failure handling
-- data contracts
-- scaling path
+```text
+optional auth
+watched
+liked
+disliked
+saved
+New For You
+```
 
-Use Mermaid diagrams where useful.
-
----
-
-## Agent Task
-
-Your first task is architecture only.
-
-Do not immediately generate the application.
-
-Do not create dozens of implementation files.
-
-Instead:
-
-1. Analyze the product requirements in this document.
-2. Identify ambiguous domain decisions.
-3. Make reasonable assumptions and document them.
-4. Propose 2-3 viable architecture options.
-5. Compare their trade-offs.
-6. Recommend one architecture for the MVP.
-7. Design the end-to-end data flow.
-8. Define storage choices.
-9. Define ingestion strategy.
-10. Define historical tracking strategy.
-11. Propose the analytical data model.
-12. Define orchestration.
-13. Define serving/API strategy.
-14. Define frontend boundaries.
-15. Define deployment strategy.
-16. Define testing and observability.
-17. Define how the architecture can evolve from Greece-only to multi-country.
-18. Propose a repository structure.
-19. Produce Mermaid architecture and data-model diagrams.
-20. Write the final proposal into:
-
-`docs/architecture.md`
-
-Do not implement the project until the architecture has been reviewed.
+Do not jump to Phase 7 before the discovery experience is solid.
 
 ---
 
-## Architecture Decision Priorities
+# 43. Definition of a Good MVP
 
-When making trade-offs, optimize in this order:
+A successful MVP allows a user to:
 
-1. Correct data model
-2. Useful product
-3. Maintainability
-4. Low operational cost
-5. Developer simplicity
-6. Data history
-7. Extensibility
-8. Performance
-9. Scale
+1. Open WatchPulse without logging in.
+2. Select their region.
+3. Select one or more streaming platforms.
+4. Select movie/series.
+5. Filter by genre.
+6. Filter by runtime.
+7. Filter by release year/rating.
+8. See a Top 10 that changes dynamically.
+9. See New Releases that respect the same filters.
+10. See Recently Added titles.
+11. See Leaving Soon titles.
+12. See Upcoming titles.
+13. Open a title and see useful metadata.
+14. Experience all filter changes without external API calls.
 
-Do not choose a complex technology simply because it looks impressive in a portfolio.
-
-The architecture should look like something a strong Data/Analytics Engineer would genuinely choose for this workload.
+The app should be live, stable, and visually credible enough to put on a CV.
 
 ---
 
-## Final Architecture Deliverable
+# 44. Critical Rules for Coding Agents
 
-`docs/architecture.md` should contain at minimum:
+When implementing WatchPulse:
 
-- Problem statement
-- Product scope
-- Assumptions
-- Non-goals
-- Domain model
-- Architecture options considered
-- Recommended architecture
-- System diagram
-- Data flow
-- Storage model
-- Ingestion design
-- Transformation/dbt design
-- Historical tracking
-- Ranking design
-- Serving/API layer
-- Frontend boundary
-- Testing
-- Observability
-- Failure recovery
-- Deployment
-- Cost considerations
-- Security considerations
-- Scaling strategy
-- Repository structure
-- MVP implementation phases
-- Open questions
+1. **Do not trigger external APIs from frontend filter changes.**
+2. **Do not make TMDB or Streaming Availability API availability part of the request path for normal browsing.**
+3. **Persist upstream data locally.**
+4. **Use `tmdb_id` as the primary shared external content identifier whenever possible.**
+5. **Always scope streaming availability by region.**
+6. **Always scope streaming availability by provider.**
+7. **Keep New Releases and Recently Added separate.**
+8. **Persist historical streaming events.**
+9. **Apply active global filters consistently across all sections.**
+10. **Keep raw source schemas away from the frontend.**
+11. **Use safe parameterized queries.**
+12. **Keep ranking logic replaceable.**
+13. **Keep external provider adapters replaceable.**
+14. **Do not require login for core discovery.**
+15. **Do not turn AI into a general chatbot.**
+16. **Do not let the LLM invent streaming availability.**
+17. **Do not expose secrets to the browser.**
+18. **Do not over-engineer infrastructure before usage requires it.**
+19. **Prefer a polished, working live product over additional unfinished features.**
+20. **Keep the project understandable enough that a recruiter or engineer can inspect the repo and understand the architecture.**
 
-End the document with a short section:
+---
 
-## Decisions Needed Before Implementation
+# 45. Guiding Product Statement
 
-Only after those decisions are reviewed should implementation begin.
+When deciding between implementations, prefer the one that best serves this statement:
+
+> WatchPulse helps people decide what to watch by combining their region, streaming services, constraints, and mood with a real, locally queryable streaming catalog.
+
+External APIs build the catalog.
+
+The WatchPulse data layer maintains the catalog.
+
+The query engine answers the question.
+
+The frontend makes the decision easy.

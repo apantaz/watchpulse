@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 20
     env:
       STREAMING_AVAILABILITY_API_KEY: ${{ secrets.STREAMING_AVAILABILITY_API_KEY }}
+      SUPPORTED_PROVIDERS: netflix,disney_plus,prime_video,apple_tv_plus
 
     steps:
       - name: Check out repository
@@ -38,12 +39,14 @@ jobs:
             exit 1
           fi
 
-      - name: Ingest one page per lifecycle type
+      - name: Fully ingest combined new and upcoming changes
         run: >-
           python -m ingestion.run_streaming_availability
           --country GR
-          --max-requests 5
-          --max-pages-per-type 1
+          --change-type new
+          --change-type upcoming
+          --all-pages
+          --max-requests 500
 
       - name: Upload lifecycle data
         uses: actions/upload-artifact@v4

@@ -5,13 +5,12 @@ watch based on their region, streaming services, and preferences. External APIs
 populate a local catalog; browsing and filter changes will query WatchPulse's
 own data rather than calling upstream APIs.
 
-The MVP will provide region- and provider-aware discovery across five shared,
+The MVP will provide region- and provider-aware discovery across four shared,
 filterable sections:
 
 - Top 10
 - New Releases
 - Recently Added
-- Leaving Soon
 - Upcoming
 
 See [AGENTS.md](AGENTS.md) for the current product requirements and
@@ -251,11 +250,36 @@ python -m ingestion.run_streaming_availability \
   --max-pages-per-type 1
 ```
 
-A normal bounded run requests all five lifecycle types:
+A normal bounded MVP run requests one page each for `new` and `upcoming`:
 
 ```bash
 python -m ingestion.run_streaming_availability --country GR
 ```
+
+This costs at most two requests with the default configuration. The client and
+event model still support `removed`, `updated`, and `expiring`, but those types
+and the Leaving Soon section are deferred beyond the first public release.
+
+Full pagination is opt-in and remains protected by the request ceiling:
+
+```bash
+python -m ingestion.run_streaming_availability \
+  --country GR \
+  --change-type new \
+  --all-pages \
+  --max-requests 500
+```
+
+The manual GitHub workflow uses that full-pagination mode for the four combined
+subscription catalogs (`netflix`, `disney_plus`, `prime_video`, and
+`apple_tv_plus`). It has no cron trigger, follows both selected cursor chains to
+completion, and stops before request attempt 501. Ordinary local runs remain
+limited to one page per type unless `--all-pages` is supplied.
+
+The configured monthly cap relies on the DuckDB usage ledger and therefore
+applies across runs only where that database persists. Until durable workflow
+storage is introduced, each manual GitHub invocation must be treated as having
+its own 500-request ceiling.
 
 The runner combines all configured subscription providers per request, writes
 raw pages under `data/lake/raw`, writes normalized append-only events under

@@ -23,14 +23,16 @@ It is a streaming decision engine, not a linear TV guide or a general-purpose
 catalog. The deterministic MVP supports discovery without an account and keeps
 natural-language discovery and personalization as later, replaceable layers.
 
-The five initial discovery sections are:
+The four first-release discovery sections are:
 
 - Top 10: WatchPulse's own ranking of currently available titles;
 - New Releases: content whose release date is within a configurable window;
 - Recently Added: content recently added to a provider in the selected region;
-- Leaving Soon: currently available content with a near-term expiration;
 - Upcoming: announced future provider availability, kept separate from current
   availability.
+
+Leaving Soon remains supported by the lifecycle model but is deferred beyond
+the first public release.
 
 New Releases and Recently Added are deliberately different business concepts.
 A 1997 film added to Netflix today is Recently Added, not a New Release.
@@ -236,7 +238,6 @@ After the shared universe is defined, section-specific rules are applied:
 | Top 10 | currently available | none | replaceable popularity score |
 | New Releases | currently available | release date within `NEW_RELEASE_DAYS` | release recency, popularity |
 | Recently Added | currently available | `available_since` within `RECENTLY_ADDED_DAYS` | availability recency |
-| Leaving Soon | currently available | expiration within `LEAVING_SOON_DAYS` | earliest expiration |
 | Upcoming | not currently available | future `available_from` | earliest arrival |
 
 Thresholds come from configuration rather than UI constants.

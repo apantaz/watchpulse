@@ -56,13 +56,13 @@ Initial sections:
 Top 10
 New Releases
 Recently Added
-Leaving Soon
 Upcoming
 ```
 
 Later:
 
 ```text
+Leaving Soon
 New For You
 Natural-language discovery
 Personalized recommendations
@@ -605,7 +605,6 @@ filters
 Top 10
 New Releases
 Recently Added
-Leaving Soon
 Upcoming
 ```
 
@@ -1691,10 +1690,9 @@ A successful MVP allows a user to:
 8. See a Top 10 that changes dynamically.
 9. See New Releases that respect the same filters.
 10. See Recently Added titles.
-11. See Leaving Soon titles.
-12. See Upcoming titles.
-13. Open a title and see useful metadata.
-14. Experience all filter changes without external API calls.
+11. See Upcoming titles.
+12. Open a title and see useful metadata.
+13. Experience all filter changes without external API calls.
 
 The app should be live, stable, and visually credible enough to put on a CV.
 

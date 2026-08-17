@@ -167,6 +167,26 @@ Consequences:
 - the selected account plan and quota must be verified before enabling a full
   scheduled production job.
 
+## ADR-012: Limit first-release lifecycle ingestion to new and upcoming
+
+- Status: accepted for the first public release
+- Date: 2026-08-17
+- Supersedes ADR-011 only for the default ingestion scope
+
+Decision: the Streaming Availability client and normalized model retain support
+for all five lifecycle types, but ordinary MVP runs request only `new` and
+`upcoming`. Current availability comes from TMDB discovery. Removed, updated,
+expiring, and the Leaving Soon section are deferred.
+
+Why: Recently Added and Upcoming provide the clearest user value for the first
+release. One page per selected type bounds an ordinary run at two requests,
+while temporary stale availability is an explicitly accepted MVP limitation.
+
+Consequences: a title removed after the last successful TMDB catalog scan may
+remain visible temporarily. The UI must show its refresh time and must not claim
+complete or real-time availability. Deferred lifecycle types can be enabled
+explicitly without changing the source adapter or event schema.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

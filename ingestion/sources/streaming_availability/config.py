@@ -9,13 +9,15 @@ PROVIDER_MAP: dict[str, str] = {
     "apple": "apple_tv_plus",
 }
 
-CHANGE_TYPES: tuple[str, ...] = (
+SUPPORTED_CHANGE_TYPES: tuple[str, ...] = (
     "new",
     "removed",
     "updated",
     "expiring",
     "upcoming",
 )
+
+DEFAULT_CHANGE_TYPES: tuple[str, ...] = ("new", "upcoming")
 
 
 def subscription_catalogs(provider_keys: tuple[str, ...]) -> tuple[str, ...]:

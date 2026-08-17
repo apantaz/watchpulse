@@ -12,6 +12,7 @@ def test_settings_load_product_defaults() -> None:
     assert settings.supported_regions == ("GR",)
     assert settings.lake_root == Path("data/lake")
     assert settings.new_release_days == 90
+    assert settings.streaming_availability_max_requests_per_run == 2
 
 
 def test_default_region_must_be_supported() -> None:

@@ -9,9 +9,18 @@ from ingestion.core.events import read_streaming_events, write_streaming_events
 from ingestion.core.http import RateLimitedClient
 from ingestion.sources.streaming_availability.adapter import events_from_changes
 from ingestion.sources.streaming_availability.client import StreamingAvailabilitySource
-from ingestion.sources.streaming_availability.config import subscription_catalogs
+from ingestion.sources.streaming_availability.config import (
+    DEFAULT_CHANGE_TYPES,
+    SUPPORTED_CHANGE_TYPES,
+    subscription_catalogs,
+)
 
 FIXTURE = Path(__file__).parent / "fixtures" / "streaming_availability_changes.json"
+
+
+def test_mvp_defaults_to_new_and_upcoming_while_all_types_remain_supported() -> None:
+    assert DEFAULT_CHANGE_TYPES == ("new", "upcoming")
+    assert set(DEFAULT_CHANGE_TYPES) < set(SUPPORTED_CHANGE_TYPES)
 
 
 def test_changes_map_to_region_scoped_events() -> None:

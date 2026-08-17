@@ -60,7 +60,7 @@ class Settings:
                 "https://api.movieofthenight.com/v4",
             ),
             streaming_availability_max_requests_per_run=_positive_int(
-                values, "STREAMING_AVAILABILITY_MAX_REQUESTS_PER_RUN", 20
+                values, "STREAMING_AVAILABILITY_MAX_REQUESTS_PER_RUN", 2
             ),
             streaming_availability_monthly_cap=_positive_int(
                 values, "STREAMING_AVAILABILITY_MONTHLY_CAP", 800

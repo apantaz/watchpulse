@@ -15,7 +15,8 @@ from ingestion.core.lake import write_raw_batch
 from ingestion.sources.streaming_availability.adapter import events_from_changes
 from ingestion.sources.streaming_availability.client import StreamingAvailabilitySource
 from ingestion.sources.streaming_availability.config import (
-    CHANGE_TYPES,
+    DEFAULT_CHANGE_TYPES,
+    SUPPORTED_CHANGE_TYPES,
     subscription_catalogs,
 )
 from watchpulse.availability_state import AvailabilityStateRepository
@@ -36,7 +37,7 @@ def run(
     provider_keys: tuple[str, ...],
     max_requests_per_run: int,
     monthly_cap: int,
-    change_types: tuple[str, ...] = CHANGE_TYPES,
+    change_types: tuple[str, ...] = DEFAULT_CHANGE_TYPES,
     max_pages_per_type: int | None = None,
 ) -> dict:
     runs = PipelineRunRepository(database_path)
@@ -104,6 +105,8 @@ def run(
             "events_written": events_written,
             "state_events_applied": state_events_applied,
             "countries": list(countries),
+            "provider_keys": list(provider_keys),
+            "catalogs": list(catalogs),
             "change_types": list(change_types),
             "max_pages_per_type": max_pages_per_type,
         }
@@ -136,10 +139,21 @@ def main() -> None:
         "--change-type",
         action="append",
         dest="change_types",
-        choices=CHANGE_TYPES,
+        choices=SUPPORTED_CHANGE_TYPES,
     )
     parser.add_argument("--max-requests", type=int)
-    parser.add_argument("--max-pages-per-type", type=int)
+    pagination = parser.add_mutually_exclusive_group()
+    pagination.add_argument(
+        "--max-pages-per-type",
+        type=int,
+        default=1,
+        help="Pages per lifecycle type (default: 1).",
+    )
+    pagination.add_argument(
+        "--all-pages",
+        action="store_true",
+        help="Follow cursors until hasMore=false, subject to request limits.",
+    )
     args = parser.parse_args()
 
     if not settings.streaming_availability_api_key:
@@ -155,6 +169,8 @@ def main() -> None:
     if args.max_pages_per_type is not None and args.max_pages_per_type <= 0:
         raise SystemExit("--max-pages-per-type must be greater than zero")
 
+    max_pages_per_type = None if args.all_pages else args.max_pages_per_type
+
     run(
         lake_root=settings.lake_root,
         database_path=settings.database_path,
@@ -164,8 +180,8 @@ def main() -> None:
         provider_keys=settings.supported_providers,
         max_requests_per_run=max_requests,
         monthly_cap=settings.streaming_availability_monthly_cap,
-        change_types=tuple(args.change_types) if args.change_types else CHANGE_TYPES,
-        max_pages_per_type=args.max_pages_per_type,
+        change_types=tuple(args.change_types) if args.change_types else DEFAULT_CHANGE_TYPES,
+        max_pages_per_type=max_pages_per_type,
     )
 
 

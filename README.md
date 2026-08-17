@@ -249,7 +249,7 @@ validation, and translation from TMDB payloads into internal content models.
 GitHub Actions currently provides:
 
 - `CI`: installs Python 3.12 dependencies, checks syntax, and runs all tests on
-  pull requests and pushes to `main`;
+  pull requests and pushes to `master`;
 - `Manual TMDB ingestion`: runs a bounded, manually triggered ingestion and
   uploads its raw Parquet lake as a seven-day workflow artifact.
 

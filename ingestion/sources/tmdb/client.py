@@ -11,8 +11,8 @@ response, so `fetch_availability` is called per unique title afterward
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
-from typing import Iterator
 
 from ingestion.core.http import RateLimitedClient
 from ingestion.core.lake import RawRecord
@@ -23,16 +23,26 @@ from ingestion.sources.tmdb.config import MAX_DISCOVER_PAGES, TMDB_BASE_URL
 class TMDBSource(IngestionSource):
     name = "tmdb"
 
-    def __init__(self, api_key: str, http_client: RateLimitedClient | None = None) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        http_client: RateLimitedClient | None = None,
+        *,
+        base_url: str = TMDB_BASE_URL,
+    ) -> None:
         self._api_key = api_key
         self._client = http_client or RateLimitedClient(
-            base_url=TMDB_BASE_URL, min_interval_seconds=0.3
+            base_url=base_url, min_interval_seconds=0.3
         )
 
     def close(self) -> None:
         self._client.close()
 
-    def __enter__(self) -> "TMDBSource":
+    @property
+    def request_count(self) -> int:
+        return self._client.request_count
+
+    def __enter__(self) -> TMDBSource:
         return self
 
     def __exit__(self, *exc_info: object) -> None:
@@ -52,6 +62,7 @@ class TMDBSource(IngestionSource):
             params = {
                 "watch_region": country,
                 "with_watch_providers": str(provider_id),
+                "with_watch_monetization_types": "flatrate",
                 "sort_by": "popularity.desc",
                 "page": page,
             }
@@ -62,6 +73,13 @@ class TMDBSource(IngestionSource):
 
     def fetch_availability(self, *, entity_type: str, source_title_id: int) -> RawRecord:
         payload = self._get(f"/{entity_type}/{source_title_id}/watch/providers", {})
+        return RawRecord(
+            request_params={"entity_type": entity_type, "tmdb_id": source_title_id},
+            payload=payload,
+        )
+
+    def fetch_metadata(self, *, entity_type: str, source_title_id: int) -> RawRecord:
+        payload = self._get(f"/{entity_type}/{source_title_id}", {})
         return RawRecord(
             request_params={"entity_type": entity_type, "tmdb_id": source_title_id},
             payload=payload,

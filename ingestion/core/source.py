@@ -7,8 +7,8 @@ TMDB data.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from datetime import date
-from typing import Iterator
 
 from ingestion.core.lake import RawRecord
 
@@ -27,6 +27,10 @@ class IngestionSource(ABC):
     def fetch_availability(self, *, entity_type: str, source_title_id: int) -> RawRecord:
         """Yield the raw watch-providers response for a single title
         (covers all countries in one payload)."""
+
+    @abstractmethod
+    def fetch_metadata(self, *, entity_type: str, source_title_id: int) -> RawRecord:
+        """Return the source metadata response for one title."""
 
     @abstractmethod
     def fetch_changes(

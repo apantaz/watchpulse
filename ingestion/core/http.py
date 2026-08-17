@@ -59,11 +59,16 @@ class RateLimitedClient:
         self._max_attempts = max_attempts
         self._retry_wait_max_seconds = retry_wait_max_seconds
         self._last_request_at: float | None = None
+        self._request_count = 0
+
+    @property
+    def request_count(self) -> int:
+        return self._request_count
 
     def close(self) -> None:
         self._client.close()
 
-    def __enter__(self) -> "RateLimitedClient":
+    def __enter__(self) -> RateLimitedClient:
         return self
 
     def __exit__(self, *exc_info: object) -> None:
@@ -87,6 +92,7 @@ class RateLimitedClient:
         def _do_get() -> dict:
             self._throttle()
             self._last_request_at = time.monotonic()
+            self._request_count += 1
             response = self._client.get(path, params=params)
             response.raise_for_status()
             return response.json()

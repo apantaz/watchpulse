@@ -153,6 +153,11 @@ Grain: one distinct lifecycle event reported or derived by WatchPulse.
 Update strategy: append-only with deterministic deduplication. Current upstream
 state never deletes old events.
 
+Before dbt materializes this model in v0.3, v0.2 persists the same normalized
+contract as append-only Parquet under `data/lake/events`, partitioned by source,
+region, and ingestion date. Deterministic `event_id` values allow downstream
+deduplication without discarding raw observations.
+
 ### `title_daily_metrics`
 
 Grain: one row per content and observation date.

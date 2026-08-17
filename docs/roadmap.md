@@ -49,6 +49,12 @@ Exit criteria result: all passed. See [v0.1 release notes](releases/v0.1.md).
 
 Goal: establish region/provider availability and historical events.
 
+Current status: **complete pending merge (2026-08-17)**. Movie of the Night v4,
+provider mappings, all five lifecycle types, raw/normalized event persistence,
+idempotent current state, quota enforcement, replay/inspection, daily automation,
+and offline tests are implemented. Live Greece validation persisted 125 events
+across the five lifecycle types using six total requests.
+
 Scope:
 
 - select and document the Streaming Availability API contract;
@@ -66,6 +72,9 @@ Exit criteria:
 - upcoming titles are not current;
 - historical events survive source-window changes;
 - no secrets appear in raw request metadata or logs.
+
+Exit criteria result: all passed with documented reconciliation limitations.
+See [v0.2 release notes](releases/v0.2.md).
 
 ## v0.3 — dbt and serving catalog
 

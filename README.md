@@ -27,18 +27,23 @@ Documentation is split by responsibility:
 
 ## Project status
 
-Version `v0.1` is complete. The repository currently includes:
+Version `v0.2` is complete pending merge. The repository currently includes:
 
 - configurable TMDB discovery by region and provider;
 - full movie and TV metadata ingestion;
 - TMDB watch-provider ingestion;
+- region/provider-scoped streaming lifecycle ingestion;
+- append-only lifecycle history and idempotent DuckDB availability state;
+- bounded daily ingestion automation;
 - append-only raw Parquet storage;
 - retrying and rate-limited HTTP access;
 - source-independent content and provider models;
 - unit tests that do not make live API calls.
 
-The next version adds the Streaming Availability API and persistent streaming
-lifecycle events. See the [v0.1 release notes](docs/releases/v0.1.md).
+Version `v0.2` adds Movie of the Night's Streaming Availability API v4 and
+persistent streaming lifecycle events. Add `STREAMING_AVAILABILITY_API_KEY` only
+when running live ingestion; offline tests do not require it. See the
+[v0.2 release notes](docs/releases/v0.2.md).
 
 ## Requirements
 
@@ -232,6 +237,37 @@ python -m ingestion.sources.tmdb.list_providers
 
 This command and ingestion require network access and a valid `TMDB_API_KEY`.
 The normal test suite does not.
+
+### Streaming lifecycle ingestion (v0.2)
+
+After adding a direct Movie of the Night API key to `.env`, run a one-request
+Greece smoke test:
+
+```bash
+python -m ingestion.run_streaming_availability \
+  --country GR \
+  --change-type new \
+  --max-requests 1 \
+  --max-pages-per-type 1
+```
+
+A normal bounded run requests all five lifecycle types:
+
+```bash
+python -m ingestion.run_streaming_availability --country GR
+```
+
+The runner combines all configured subscription providers per request, writes
+raw pages under `data/lake/raw`, writes normalized append-only events under
+`data/lake/events`, and records usage in DuckDB. It enforces both the per-run and
+calendar-month request limits from `.env`, including retry attempts.
+
+Inspect or replay locally persisted events:
+
+```bash
+python -m ingestion.inspect_events --country GR --limit 20
+python -m ingestion.replay_events --country GR
+```
 
 ## Tests
 

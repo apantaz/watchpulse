@@ -22,6 +22,10 @@ class TooManyRetriesError(RuntimeError):
     pass
 
 
+class RequestBudgetExceeded(RuntimeError):
+    pass
+
+
 def _is_retryable(exc: BaseException) -> bool:
     if isinstance(exc, httpx.TransportError):
         return True
@@ -48,6 +52,7 @@ class RateLimitedClient:
         headers: dict[str, str] | None = None,
         transport: httpx.BaseTransport | None = None,
         retry_wait_max_seconds: float = 30.0,
+        max_requests: int | None = None,
     ) -> None:
         self._client = httpx.Client(
             base_url=base_url,
@@ -60,6 +65,7 @@ class RateLimitedClient:
         self._retry_wait_max_seconds = retry_wait_max_seconds
         self._last_request_at: float | None = None
         self._request_count = 0
+        self._max_requests = max_requests
 
     @property
     def request_count(self) -> int:
@@ -90,6 +96,10 @@ class RateLimitedClient:
             retry=retry_if_exception(_is_retryable),
         )
         def _do_get() -> dict:
+            if self._max_requests is not None and self._request_count >= self._max_requests:
+                raise RequestBudgetExceeded(
+                    f"HTTP request budget of {self._max_requests} was exhausted"
+                )
             self._throttle()
             self._last_request_at = time.monotonic()
             self._request_count += 1

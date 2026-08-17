@@ -140,11 +140,37 @@ catalogs or becoming a general chatbot.
 Consequences: backend-only model calls, request/cost limits, usage records, and
 a global kill switch are prerequisites.
 
+## ADR-011: Movie of the Night v4 for streaming lifecycle data
+
+- Status: accepted for v0.2
+- Date: 2026-08-17
+
+Decision: use the direct Movie of the Night Streaming Availability API v4 as
+the first streaming lifecycle source. Authenticate with `X-API-Key`, keep the
+base URL configurable, and use `GET /changes` for region/provider-scoped `new`,
+`removed`, `updated`, `expiring`, and `upcoming` events.
+
+Why: the official contract exposes the exact lifecycle concepts WatchPulse
+needs, supports ISO alpha-2 countries and subscription-only catalog selectors,
+uses cursor pagination, and returns affected shows with `tmdbId` for joining to
+the TMDB metadata catalog.
+
+Consequences:
+
+- WatchPulse must ingest at least daily and retain its own event history because
+  past/future change queries are limited to a 31-day window;
+- unknown future dates are valid and remain nullable;
+- initial v0.2 ingestion is show-level; season/episode events are deferred;
+- source service IDs are mapped to stable WatchPulse provider keys;
+- the direct developer endpoint is implemented first; a RapidAPI adapter can be
+  added later without changing normalized models;
+- the selected account plan and quota must be verified before enabling a full
+  scheduled production job.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:
 
-- Streaming Availability API vendor, plan, endpoints, and exact payload contract;
 - frontend framework for the production-looking MVP;
 - hosting platform and atomic DuckDB artifact delivery;
 - initial public regions and providers beyond the configurable Greece default;

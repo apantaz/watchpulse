@@ -104,9 +104,7 @@ def run(
                         source.fetch_metadata(entity_type=entity_type, source_title_id=tmdb_id)
                     )
                     availability_batch.append(
-                        source.fetch_availability(
-                            entity_type=entity_type, source_title_id=tmdb_id
-                        )
+                        source.fetch_availability(entity_type=entity_type, source_title_id=tmdb_id)
                     )
                     if len(metadata_batch) < AVAILABILITY_BATCH_SIZE:
                         continue
@@ -154,9 +152,7 @@ def run(
                     metadata_written += len(metadata_batch)
                     availability_written += len(availability_batch)
 
-        raw_records_written = (
-            discover_pages_written + metadata_written + availability_written
-        )
+        raw_records_written = discover_pages_written + metadata_written + availability_written
         summary = {
             "run_id": run_id,
             "duration_seconds": round(time.monotonic() - started_at, 1),

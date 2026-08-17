@@ -69,6 +69,20 @@ class PipelineRunRepository:
                 [run_id, job_name, source, datetime.now(timezone.utc)],
             )
 
+    def request_count_for_current_month(self, *, source: str) -> int:
+        self.initialize()
+        with duckdb.connect(str(self._database_path)) as connection:
+            value = connection.execute(
+                """
+                SELECT COALESCE(SUM(api_request_count), 0)
+                FROM pipeline_runs
+                WHERE source = ?
+                  AND started_at >= date_trunc('month', current_timestamp)
+                """,
+                [source],
+            ).fetchone()[0]
+        return int(value)
+
     def succeed(
         self,
         *,

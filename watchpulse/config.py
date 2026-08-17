@@ -30,6 +30,10 @@ def _regions(value: str) -> tuple[str, ...]:
 class Settings:
     tmdb_api_key: str | None
     tmdb_base_url: str
+    streaming_availability_api_key: str | None
+    streaming_availability_base_url: str
+    streaming_availability_max_requests_per_run: int
+    streaming_availability_monthly_cap: int
     lake_root: Path
     database_path: Path
     default_region: str
@@ -50,6 +54,17 @@ class Settings:
         return cls(
             tmdb_api_key=values.get("TMDB_API_KEY") or None,
             tmdb_base_url=values.get("TMDB_BASE_URL", "https://api.themoviedb.org/3"),
+            streaming_availability_api_key=(values.get("STREAMING_AVAILABILITY_API_KEY") or None),
+            streaming_availability_base_url=values.get(
+                "STREAMING_AVAILABILITY_BASE_URL",
+                "https://api.movieofthenight.com/v4",
+            ),
+            streaming_availability_max_requests_per_run=_positive_int(
+                values, "STREAMING_AVAILABILITY_MAX_REQUESTS_PER_RUN", 20
+            ),
+            streaming_availability_monthly_cap=_positive_int(
+                values, "STREAMING_AVAILABILITY_MONTHLY_CAP", 800
+            ),
             lake_root=Path(values.get("LAKE_ROOT", "data/lake")),
             database_path=Path(values.get("DATABASE_PATH", "data/warehouse.duckdb")),
             default_region=default_region,

@@ -22,14 +22,11 @@ class CatalogTitle:
     popularity: float
 
 
-def read_catalog_sample(
-    *, lake_root: Path, country: str, limit: int = 20
-) -> list[CatalogTitle]:
+def read_catalog_sample(*, lake_root: Path, country: str, limit: int = 20) -> list[CatalogTitle]:
     """Read and deduplicate discover results already stored in the raw lake."""
     country = country.upper()
     pattern = (
-        "raw/source=tmdb/endpoint=discover_*/entity_type=*/"
-        f"country={country}/date=*/*.parquet"
+        f"raw/source=tmdb/endpoint=discover_*/entity_type=*/country={country}/date=*/*.parquet"
     )
     titles: dict[tuple[str, str, int], CatalogTitle] = {}
 
@@ -85,8 +82,7 @@ def main() -> None:
     )
     if not titles:
         raise SystemExit(
-            f"No local TMDB discover data found for {args.country.upper()}. "
-            "Run ingestion first."
+            f"No local TMDB discover data found for {args.country.upper()}. Run ingestion first."
         )
 
     print(f"Current subscription catalog sample for {args.country.upper()} (TMDB seed)\n")

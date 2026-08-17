@@ -33,9 +33,7 @@ def content_from_tmdb(payload: dict[str, Any], *, content_type: ContentType) -> 
         runtime_minutes=int(runtime) if runtime is not None else None,
         original_language=payload.get("original_language") or None,
         tmdb_rating=(
-            float(payload["vote_average"])
-            if payload.get("vote_average") is not None
-            else None
+            float(payload["vote_average"]) if payload.get("vote_average") is not None else None
         ),
         vote_count=int(payload.get("vote_count") or 0),
         tmdb_popularity=(

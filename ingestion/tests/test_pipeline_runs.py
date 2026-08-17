@@ -39,6 +39,22 @@ def test_successful_pipeline_run_is_persisted(tmp_path: Path) -> None:
     assert '"country": "GR"' in str(row[6])
 
 
+def test_monthly_request_count_is_scoped_by_source(tmp_path: Path) -> None:
+    database_path = tmp_path / "warehouse.duckdb"
+    runs = PipelineRunRepository(database_path)
+    for run_id, source, count in (("one", "tmdb", 100), ("two", "streaming", 7)):
+        runs.start(run_id=run_id, job_name="test", source=source)
+        runs.succeed(
+            run_id=run_id,
+            api_request_count=count,
+            rows_fetched=0,
+            rows_inserted=0,
+            details={},
+        )
+
+    assert runs.request_count_for_current_month(source="streaming") == 7
+
+
 def test_failed_pipeline_run_redacts_secrets(tmp_path: Path) -> None:
     database_path = tmp_path / "nested" / "warehouse.duckdb"
     runs = PipelineRunRepository(database_path)

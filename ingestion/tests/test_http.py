@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-from ingestion.core.http import RateLimitedClient, TooManyRetriesError
+from ingestion.core.http import RateLimitedClient, RequestBudgetExceeded, TooManyRetriesError
 
 
 def _client(handler) -> RateLimitedClient:
@@ -58,3 +58,20 @@ def test_get_json_does_not_retry_on_4xx_other_than_429() -> None:
         with pytest.raises(TooManyRetriesError):
             client.get_json("/thing")
     assert calls["n"] == 1
+
+
+def test_get_json_never_exceeds_request_budget() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"ok": True})
+
+    client = RateLimitedClient(
+        base_url="https://example.test",
+        min_interval_seconds=0,
+        max_requests=1,
+        transport=httpx.MockTransport(handler),
+    )
+    with client:
+        assert client.get_json("/first") == {"ok": True}
+        with pytest.raises(RequestBudgetExceeded, match="budget"):
+            client.get_json("/second")
+    assert client.request_count == 1

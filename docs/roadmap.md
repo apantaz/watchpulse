@@ -49,6 +49,12 @@ Exit criteria result: all passed. See [v0.1 release notes](releases/v0.1.md).
 
 Goal: establish region/provider availability and historical events.
 
+Current status: **complete pending merge (2026-08-17)**. Movie of the Night v4,
+provider mappings, all five lifecycle types, raw/normalized event persistence,
+idempotent current state, quota enforcement, replay/inspection, manual automation,
+and offline tests are implemented. The first-release default now requests only
+`new` and `upcoming`; the other types remain available but deferred.
+
 Scope:
 
 - select and document the Streaming Availability API contract;
@@ -66,6 +72,20 @@ Exit criteria:
 - upcoming titles are not current;
 - historical events survive source-window changes;
 - no secrets appear in raw request metadata or logs.
+
+Exit criteria result: lifecycle behavior passed with documented reconciliation
+limitations. Automatic daily scheduling is intentionally deferred until durable
+storage, monitoring, and a production API budget are available; the workflow is
+manual for now.
+See [v0.2 release notes](releases/v0.2.md).
+
+First-release product decision: Recently Added uses `new`, Upcoming uses
+`upcoming`, and current availability comes from TMDB discovery. Removed,
+updated, expiring, and Leaving Soon are deferred; temporary stale availability
+is an accepted MVP limitation.
+
+The manual lifecycle workflow combines the four launch providers and fully
+paginates `new` and `upcoming`. Automatic scheduling remains deferred.
 
 ## v0.3 — dbt and serving catalog
 

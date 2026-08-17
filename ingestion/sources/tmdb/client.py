@@ -31,9 +31,7 @@ class TMDBSource(IngestionSource):
         base_url: str = TMDB_BASE_URL,
     ) -> None:
         self._api_key = api_key
-        self._client = http_client or RateLimitedClient(
-            base_url=base_url, min_interval_seconds=0.3
-        )
+        self._client = http_client or RateLimitedClient(base_url=base_url, min_interval_seconds=0.3)
 
     def close(self) -> None:
         self._client.close()

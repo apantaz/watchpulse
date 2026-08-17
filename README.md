@@ -5,13 +5,12 @@ watch based on their region, streaming services, and preferences. External APIs
 populate a local catalog; browsing and filter changes will query WatchPulse's
 own data rather than calling upstream APIs.
 
-The MVP will provide region- and provider-aware discovery across five shared,
+The MVP will provide region- and provider-aware discovery across four shared,
 filterable sections:
 
 - Top 10
 - New Releases
 - Recently Added
-- Leaving Soon
 - Upcoming
 
 See [AGENTS.md](AGENTS.md) for the current product requirements and
@@ -27,18 +26,23 @@ Documentation is split by responsibility:
 
 ## Project status
 
-Version `v0.1` is complete. The repository currently includes:
+Version `v0.2` is complete pending merge. The repository currently includes:
 
 - configurable TMDB discovery by region and provider;
 - full movie and TV metadata ingestion;
 - TMDB watch-provider ingestion;
+- region/provider-scoped streaming lifecycle ingestion;
+- append-only lifecycle history and idempotent DuckDB availability state;
+- bounded manual ingestion workflow;
 - append-only raw Parquet storage;
 - retrying and rate-limited HTTP access;
 - source-independent content and provider models;
 - unit tests that do not make live API calls.
 
-The next version adds the Streaming Availability API and persistent streaming
-lifecycle events. See the [v0.1 release notes](docs/releases/v0.1.md).
+Version `v0.2` adds Movie of the Night's Streaming Availability API v4 and
+persistent streaming lifecycle events. Add `STREAMING_AVAILABILITY_API_KEY` only
+when running live ingestion; offline tests do not require it. See the
+[v0.2 release notes](docs/releases/v0.2.md).
 
 ## Requirements
 
@@ -232,6 +236,62 @@ python -m ingestion.sources.tmdb.list_providers
 
 This command and ingestion require network access and a valid `TMDB_API_KEY`.
 The normal test suite does not.
+
+### Streaming lifecycle ingestion (v0.2)
+
+After adding a direct Movie of the Night API key to `.env`, run a one-request
+Greece smoke test:
+
+```bash
+python -m ingestion.run_streaming_availability \
+  --country GR \
+  --change-type new \
+  --max-requests 1 \
+  --max-pages-per-type 1
+```
+
+A normal bounded MVP run requests one page each for `new` and `upcoming`:
+
+```bash
+python -m ingestion.run_streaming_availability --country GR
+```
+
+This costs at most two requests with the default configuration. The client and
+event model still support `removed`, `updated`, and `expiring`, but those types
+and the Leaving Soon section are deferred beyond the first public release.
+
+Full pagination is opt-in and remains protected by the request ceiling:
+
+```bash
+python -m ingestion.run_streaming_availability \
+  --country GR \
+  --change-type new \
+  --all-pages \
+  --max-requests 500
+```
+
+The manual GitHub workflow uses that full-pagination mode for the four combined
+subscription catalogs (`netflix`, `disney_plus`, `prime_video`, and
+`apple_tv_plus`). It has no cron trigger, follows both selected cursor chains to
+completion, and stops before request attempt 501. Ordinary local runs remain
+limited to one page per type unless `--all-pages` is supplied.
+
+The configured monthly cap relies on the DuckDB usage ledger and therefore
+applies across runs only where that database persists. Until durable workflow
+storage is introduced, each manual GitHub invocation must be treated as having
+its own 500-request ceiling.
+
+The runner combines all configured subscription providers per request, writes
+raw pages under `data/lake/raw`, writes normalized append-only events under
+`data/lake/events`, and records usage in DuckDB. It enforces both the per-run and
+calendar-month request limits from `.env`, including retry attempts.
+
+Inspect or replay locally persisted events:
+
+```bash
+python -m ingestion.inspect_events --country GR --limit 20
+python -m ingestion.replay_events --country GR
+```
 
 ## Tests
 

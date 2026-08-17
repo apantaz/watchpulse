@@ -1,0 +1,27 @@
+{
+  "changes": [
+    {
+      "changeType": "new",
+      "itemType": "show",
+      "showId": "show-1",
+      "showType": "movie",
+      "service": {"id": "netflix", "name": "Netflix"},
+      "streamingOptionType": "subscription",
+      "timestamp": 1786924800,
+      "link": "https://www.netflix.com/title/example"
+    },
+    {
+      "changeType": "upcoming",
+      "itemType": "show",
+      "showId": "show-2",
+      "showType": "series",
+      "service": {"id": "disney", "name": "Disney+"},
+      "streamingOptionType": "subscription"
+    }
+  ],
+  "shows": {
+    "show-1": {"id": "show-1", "tmdbId": "movie/597", "title": "Example Movie"},
+    "show-2": {"id": "show-2", "tmdbId": "tv/1399", "title": "Example Series"}
+  },
+  "hasMore": false
+}

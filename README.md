@@ -26,7 +26,7 @@ Documentation is split by responsibility:
 
 ## Project status
 
-Version `v0.2` is released and `v0.3` is in progress. The repository currently
+Version `v0.3` is released and `v0.4` is next. The repository currently
 includes:
 
 - configurable TMDB discovery by region and provider;
@@ -47,10 +47,13 @@ includes:
 - normalized content, genre, provider-source, availability, and event marts;
 - unit tests that do not make live API calls.
 
-Version `v0.2` adds Movie of the Night's Streaming Availability API v4 and
-persistent streaming lifecycle events. Add `STREAMING_AVAILABILITY_API_KEY` only
-when running live ingestion; offline tests do not require it. See the
-[v0.2 release notes](docs/releases/v0.2.md).
+Version `v0.3` adds a tested dbt-duckdb warehouse, normalized data marts, a
+frontend-ready serving catalog, freshness metadata, and atomic publication that
+preserves the last good database when a candidate build fails. See the
+[v0.3 release notes](docs/releases/v0.3.md).
+
+Add `STREAMING_AVAILABILITY_API_KEY` only when running live lifecycle ingestion;
+offline tests and warehouse builds do not require it.
 
 ## Requirements
 

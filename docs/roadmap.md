@@ -91,20 +91,11 @@ paginates `new` and `upcoming`. Automatic scheduling remains deferred.
 
 Goal: turn raw source data into a tested local catalog.
 
-Current status: **in progress (2026-08-21)**. TMDB catalog discovery is separated
-from opt-in per-title enrichment. The dbt-duckdb project and tested staging
-models for TMDB discovery and normalized streaming events are implemented. The
-first intermediate models now provide canonical content, normalized lifecycle
-events, TMDB-derived current availability, and non-overlapping upcoming
-availability. Staging is materialized into DuckDB tables so the database remains
-queryable without resolving the original Parquet paths at serving time. A stable
-provider dimension and the first tested `catalog_availability` mart now expose
-160 current and 30 upcoming Greece rows from the retained development data.
-Catalog freshness metadata and tested build-to-candidate atomic publication are
-implemented; failed builds and validation errors preserve the last good file.
-The remaining normalized contracts are now implemented as `dim_content`,
-`content_genres`, `provider_source_map`, `streaming_availability`, and
-`streaming_events`, backed by version-controlled reference seeds and dbt tests.
+Current status: **complete (2026-08-21)**. The dbt-duckdb warehouse now rebuilds
+tested staging, intermediate, normalized, freshness, and serving models from the
+append-only Parquet lake. Atomic publication validates a candidate database
+before replacing the last good serving file. The retained Greece development
+data produces 160 current and 30 upcoming catalog rows across four providers.
 
 Scope:
 
@@ -122,6 +113,11 @@ Exit criteria:
 - all documented grains and invariants are tested;
 - New Release and Recently Added remain distinct;
 - failed tests cannot replace the last good serving database.
+
+Exit criteria result: all passed. `release_date` and `available_since` remain
+separate warehouse concepts so New Releases and Recently Added cannot be
+conflated; their section-level query rules are delivered by v0.4. See the
+[v0.3 release notes](releases/v0.3.md).
 
 ## v0.4 — Backend discovery API
 

@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: install install-hooks dbt-deps dbt-parse precommit pre-commit prepush pre-push syntax test ci
+.PHONY: install install-hooks dbt-deps dbt-parse precommit pre-commit ci-precommit prepush pre-push syntax test coverage ci
 
 install:
 	$(PYTHON) -m pip install -e ".[dev,warehouse]"
@@ -19,6 +19,9 @@ precommit:
 
 pre-commit: precommit
 
+ci-precommit:
+	SKIP=no-commit-to-branch $(PYTHON) -m pre_commit run --all-files --hook-stage pre-commit
+
 prepush:
 	$(PYTHON) -m pre_commit run --all-files --hook-stage pre-push
 
@@ -30,4 +33,7 @@ syntax:
 test:
 	$(PYTHON) -m pytest -q
 
-ci: dbt-deps precommit syntax dbt-parse test
+coverage:
+	$(PYTHON) -m pytest -q --cov=watchpulse --cov=ingestion --cov-report=term-missing --cov-report=xml --cov-fail-under=65
+
+ci: dbt-deps ci-precommit syntax dbt-parse coverage

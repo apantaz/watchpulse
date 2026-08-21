@@ -54,31 +54,30 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
-  - repo: local
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.14
     hooks:
       - id: ruff-check
-        name: Ruff check
-        entry: python -m ruff check
-        language: system
-        types: [python]
         stages: [pre-commit]
 
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
       - id: detect-secrets
-        name: Detect secrets
-        entry: detect-secrets-hook --baseline .secrets.baseline
-        language: system
-        types: [text]
+        args: [--baseline, .secrets.baseline]
         stages: [pre-commit]
 
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.16.3
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  - repo: local
+    hooks:
       - id: pytest
-        name: Offline test suite
-        entry: python -m pytest -q
+        name: Offline test suite with coverage
+        entry: make coverage
         language: system
         pass_filenames: false
         stages: [pre-push]
-
-      - id: commitizen
-        name: Conventional commit message
-        entry: cz check --commit-msg-file
-        language: system
-        stages: [commit-msg]

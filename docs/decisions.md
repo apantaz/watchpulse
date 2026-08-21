@@ -246,6 +246,26 @@ Consequences:
 - keep a strict unknown-genre test so incomplete candidates cannot be published;
 - retain the seed only as a bootstrap/fallback fixture once ingestion exists.
 
+## ADR-016: Use FastAPI behind a read-only catalog repository
+
+- Status: accepted for v0.4
+- Date: 2026-08-21
+
+Decision: the discovery backend uses a FastAPI application factory and accesses
+the atomically published DuckDB database through a repository boundary. Each
+repository connection is read-only. Liveness does not depend on catalog
+availability, while catalog-dependent endpoints return HTTP 503 when the
+published database is missing or unreadable.
+
+Why: FastAPI provides typed validation and generated OpenAPI documentation with
+little framework code. The application factory keeps tests isolated, and the
+repository prevents DuckDB details from becoming part of the HTTP contract.
+
+Consequences: normal browsing never calls upstream APIs or writes to the
+warehouse. The repository can later target a different serving database without
+changing endpoint response models. Deployment must provide a readable published
+database through `WATCHPULSE_SERVING_DB_PATH`.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

@@ -36,6 +36,7 @@ class Settings:
     streaming_availability_monthly_cap: int
     lake_root: Path
     database_path: Path
+    serving_database_path: Path
     default_region: str
     supported_regions: tuple[str, ...]
     supported_providers: tuple[str, ...]
@@ -67,6 +68,9 @@ class Settings:
             ),
             lake_root=Path(values.get("LAKE_ROOT", "data/lake")),
             database_path=Path(values.get("DATABASE_PATH", "data/warehouse.duckdb")),
+            serving_database_path=Path(
+                values.get("WATCHPULSE_SERVING_DB_PATH", "data/warehouse_serving.duckdb")
+            ),
             default_region=default_region,
             supported_regions=supported_regions,
             supported_providers=_csv(

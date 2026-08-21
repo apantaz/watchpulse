@@ -95,8 +95,9 @@ The repository's pre-commit configuration uses dbt-checkpoint to compile dbt
 changes and generate the documentation catalog before every commit. Both hooks
 explicitly use this directory for the dbt project and profile. They select the
 `pre_commit` profile target because Git invokes hooks from the repository root;
-normal commands run inside `warehouse` continue to use `dev`. Install the Git
-hooks with:
+that target writes its disposable DuckDB file under `warehouse`, whose parent
+exists on fresh CI runners. Normal commands run inside `warehouse` continue to
+use `dev`. Install the Git hooks with:
 
 ```bash
 make install-hooks

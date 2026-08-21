@@ -7,5 +7,5 @@ watchpulse:
       threads: 4
     pre_commit:
       type: duckdb
-      path: "{{ env_var('WATCHPULSE_DBT_PATH', 'data/warehouse_dev.duckdb') }}"
+      path: "{{ env_var('WATCHPULSE_DBT_PATH', 'warehouse/pre_commit.duckdb') }}"
       threads: 4

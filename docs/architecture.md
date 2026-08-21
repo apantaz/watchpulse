@@ -254,7 +254,9 @@ filters are applied. It must never claim to be an official provider Top 10.
 ## 10. Ingestion behavior
 
 - Initial region onboarding performs a bounded catalog backfill.
-- Daily jobs ingest streaming changes and enrich new or changed TMDB titles.
+- Broad TMDB catalog backfills are discovery-only and reuse the metadata already
+  present in discovery responses.
+- Incremental jobs enrich only new, changed, or prioritized TMDB titles.
 - Periodic reconciliation corrects missed upstream lifecycle changes.
 - HTTP clients use timeouts, conservative throttling, capped retries, and
   exponential backoff for transport errors, rate limits, and server errors.
@@ -262,6 +264,11 @@ filters are applied. It must never claim to be an official provider Top 10.
   request metadata or logs.
 - Provider source identifiers are mapped to stable internal provider keys.
 - Normal tests use fixtures or mock transports and make no live calls.
+
+Every TMDB discovery query records upstream pages/results, fetched pages,
+completion status, and whether the source's 500-page ceiling truncated it.
+Incomplete queries remain usable diagnostics but must not be published as a
+complete serving catalog.
 
 The current Phase 1 implementation uses TMDB provider discovery to seed the raw
 catalog. It is not the final lifecycle source and does not replace Phase 2's

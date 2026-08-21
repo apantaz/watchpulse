@@ -1,13 +1,12 @@
-"""Phase 1 entrypoint: TMDB ingestion for Greece -> raw Parquet lake.
+"""TMDB catalog discovery with optional per-title enrichment.
 
 Two-pass strategy (see ingestion/sources/tmdb/client.py for why):
 
 1. Discover: for each (country, entity_type, provider), page through
    `discover/{type}` filtered to that provider/country to find candidate
    title ids. Each page is written to the raw lake as-is.
-2. Enrich: for each unique title id found across all providers, fetch its
-   metadata and authoritative `watch/providers` payload and write both to
-   the raw lake.
+2. Optional enrichment: only when explicitly requested, fetch full metadata
+   and authoritative `watch/providers` payloads for each unique title.
 
 Every write is append-only and idempotent (see ingestion/core/lake.py) --
 re-running this script for the same day is always safe.
@@ -25,7 +24,12 @@ from dotenv import load_dotenv
 
 from ingestion.core.lake import write_raw_batch
 from ingestion.sources.tmdb.client import TMDBSource
-from ingestion.sources.tmdb.config import DEFAULT_COUNTRIES, ENTITY_TYPES, PROVIDERS
+from ingestion.sources.tmdb.config import (
+    DEFAULT_COUNTRIES,
+    ENTITY_TYPES,
+    MAX_DISCOVER_PAGES,
+    PROVIDERS,
+)
 from watchpulse.config import Settings
 from watchpulse.pipeline_runs import PipelineRunRepository, sanitize_error
 
@@ -42,6 +46,7 @@ def run(
     providers: dict[str, int] = PROVIDERS,
     entity_types: tuple[str, ...] = ENTITY_TYPES,
     max_pages: int | None = None,
+    enrich: bool = False,
     tmdb_base_url: str | None = None,
     database_path: Path | None = None,
 ) -> dict:
@@ -49,6 +54,7 @@ def run(
     started_at = time.monotonic()
     discovered_ids: dict[str, set[int]] = {et: set() for et in entity_types}
     discover_pages_written = 0
+    discovery_queries = []
 
     source_options = {"base_url": tmdb_base_url} if tmdb_base_url else {}
     source = TMDBSource(api_key, **source_options)
@@ -86,6 +92,25 @@ def run(
                         )
                         if written:
                             discover_pages_written += len(records)
+                        first_payload = records[0].payload if records else {}
+                        upstream_total_pages = int(first_payload.get("total_pages", 0) or 0)
+                        expected_pages = min(upstream_total_pages, MAX_DISCOVER_PAGES)
+                        pages_fetched = len(records)
+                        discovery_queries.append(
+                            {
+                                "country": country.upper(),
+                                "provider_key": provider_slug,
+                                "content_type": entity_type,
+                                "upstream_total_pages": upstream_total_pages,
+                                "expected_pages": expected_pages,
+                                "pages_fetched": pages_fetched,
+                                "total_results": int(first_payload.get("total_results", 0) or 0),
+                                "complete": pages_fetched == expected_pages
+                                and upstream_total_pages <= MAX_DISCOVER_PAGES,
+                                "truncated_by_source_limit": upstream_total_pages
+                                > MAX_DISCOVER_PAGES,
+                            }
+                        )
                         logger.info(
                             "discover country=%s entity_type=%s provider=%s pages=%d",
                             country,
@@ -96,7 +121,8 @@ def run(
 
             metadata_written = 0
             availability_written = 0
-            for entity_type, ids in discovered_ids.items():
+            ids_to_enrich = discovered_ids.items() if enrich else ()
+            for entity_type, ids in ids_to_enrich:
                 metadata_batch = []
                 availability_batch = []
                 for tmdb_id in sorted(ids):
@@ -158,9 +184,13 @@ def run(
             "duration_seconds": round(time.monotonic() - started_at, 1),
             "api_request_count": source.request_count,
             "discover_pages_written": discover_pages_written,
+            "discovery_complete": bool(discovery_queries)
+            and all(query["complete"] for query in discovery_queries),
+            "discovery_queries": discovery_queries,
             "discovered_title_counts": {
                 entity_type: len(ids) for entity_type, ids in discovered_ids.items()
             },
+            "enrichment_enabled": enrich,
             "metadata_records_written": metadata_written,
             "availability_records_written": availability_written,
         }
@@ -197,6 +227,11 @@ def main() -> None:
         dest="countries",
         help="ISO2 country code; repeatable. Defaults to configured launch countries.",
     )
+    parser.add_argument(
+        "--enrich",
+        action="store_true",
+        help="Fetch full metadata and watch-provider payloads for every discovered title.",
+    )
     parser.add_argument("--lake-root", default=str(settings.lake_root))
     parser.add_argument(
         "--max-pages",
@@ -205,6 +240,9 @@ def main() -> None:
         help="Cap discover pagination per provider (useful for a quick smoke test).",
     )
     args = parser.parse_args()
+
+    if args.max_pages is not None and args.max_pages <= 0:
+        raise SystemExit("--max-pages must be greater than zero")
 
     api_key = settings.tmdb_api_key
     if not api_key:
@@ -225,6 +263,7 @@ def main() -> None:
         countries=countries,
         providers=providers,
         max_pages=args.max_pages,
+        enrich=args.enrich,
         tmdb_base_url=settings.tmdb_base_url,
         database_path=settings.database_path,
     )

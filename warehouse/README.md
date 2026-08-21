@@ -17,12 +17,12 @@ This component must not call external APIs.
 warehouse/
 ├── analyses/       Read-only compiled analytical queries
 ├── docs/
-│   ├── staging/    tables.md and columns.md
-│   ├── intermediate/ tables.md and columns.md
-│   └── marts/      tables.md and columns.md
+│   ├── staging/    models.md and columns.md
+│   ├── intermediate/ models.md and columns.md
+│   └── marts/      models.md and columns.md
 ├── macros/         Reusable Jinja/dbt logic
 ├── models/
-│   ├── staging/    Typed source-facing views
+│   ├── staging/    Typed source-facing tables
 │   ├── intermediate/ Reusable business transformations
 │   └── marts/      Serving tables
 ├── seeds/          Small version-controlled reference data
@@ -40,7 +40,7 @@ Every database object must have a model description, documented grain, owner,
 source, and descriptions/data types for every exposed column. Supported
 adapters persist those descriptions into relations and columns.
 
-Each model layer has a matching folder under `warehouse/docs`: `tables.md`
+Each model layer has a matching folder under `warehouse/docs`: `models.md`
 contains relation-level dbt doc blocks and `columns.md` contains reusable
 column-level doc blocks. The `docs-paths` setting points to that dedicated root.
 

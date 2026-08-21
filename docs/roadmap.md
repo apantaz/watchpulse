@@ -93,7 +93,11 @@ Goal: turn raw source data into a tested local catalog.
 
 Current status: **in progress (2026-08-21)**. TMDB catalog discovery is separated
 from opt-in per-title enrichment. The dbt-duckdb project and tested staging
-models for TMDB discovery and normalized streaming events are implemented.
+models for TMDB discovery and normalized streaming events are implemented. The
+first intermediate models now provide canonical content, normalized lifecycle
+events, TMDB-derived current availability, and non-overlapping upcoming
+availability. Staging is materialized into DuckDB tables so the database remains
+queryable without resolving the original Parquet paths at serving time.
 
 Scope:
 

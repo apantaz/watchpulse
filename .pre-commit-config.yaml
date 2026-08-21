@@ -6,16 +6,56 @@ default_install_hook_types:
 fail_fast: true
 
 repos:
+  - repo: local
+    hooks:
+      - id: prevent-protected-branch-push
+        name: Prevent direct pushes to main/master
+        entry: python -m watchpulse.dev.protected_branch
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: no-commit-to-branch
         args: [--branch, main, --branch, master]
         stages: [pre-commit]
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-ast
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
 
   - repo: https://github.com/dbt-checkpoint/dbt-checkpoint
-    rev: v2.0.7
+    rev: v2.0.10
     hooks:
+      - id: dbt-parse
+        args:
+          - --global-flags
+          - ++log-path
+          - warehouse/logs
+          - --cmd-flags
+          - ++project-dir
+          - warehouse
+          - ++profiles-dir
+          - warehouse
+          - ++target
+          - pre_commit
+        additional_dependencies:
+          - dbt-core>=1.12,<1.13
+          - dbt-duckdb>=1.11,<1.12
+        always_run: true
+        pass_filenames: false
+        stages: [pre-push]
+
       - id: dbt-compile
         args:
           - --global-flags
@@ -31,6 +71,7 @@ repos:
           - ++target
           - pre_commit
         additional_dependencies:
+          - dbt-core>=1.12,<1.13
           - dbt-duckdb>=1.11,<1.12
         always_run: true
         pass_filenames: false
@@ -49,15 +90,19 @@ repos:
           - ++target
           - pre_commit
         additional_dependencies:
+          - dbt-core>=1.12,<1.13
           - dbt-duckdb>=1.11,<1.12
         always_run: true
         pass_filenames: false
         stages: [pre-commit]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.14
+    rev: v0.16.0
     hooks:
       - id: ruff-check
+        args: [--fix]
+        stages: [pre-commit]
+      - id: ruff-format
         stages: [pre-commit]
 
   - repo: https://github.com/Yelp/detect-secrets

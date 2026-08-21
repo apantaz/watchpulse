@@ -1,5 +1,9 @@
 {% docs col_first_observed_at %}
-Earliest retained TMDB discovery observation across current provider catalogs.
+Earliest retained observation across the available metadata sources.
+{% enddocs %}
+
+{% docs col_metadata_source %}
+Source selected for the canonical row; TMDB is preferred when available.
 {% enddocs %}
 
 {% docs col_event_effective_at %}

@@ -31,3 +31,16 @@ distinct from current availability.
 Grain: one row per `event_id`.
 
 {% enddocs %}
+
+{% docs stg_streaming_shows %}
+
+## Streaming show metadata staging
+
+Extracts the latest title metadata embedded in retained Streaming Availability
+change pages. This model is a fallback for lifecycle titles that have not yet
+been discovered by TMDB; it does not replace TMDB as the preferred metadata
+source. Source ratings and signed image URLs are intentionally excluded.
+
+Grain: one row per `tmdb_id + content_type`.
+
+{% enddocs %}

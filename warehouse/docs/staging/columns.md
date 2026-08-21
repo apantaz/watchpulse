@@ -30,8 +30,20 @@ TMDB synopsis; nullable when no overview is available.
 Movie release date or TV first-air date.
 {% enddocs %}
 
+{% docs col_release_year %}
+Four-digit content release year when the source does not provide a full date.
+{% enddocs %}
+
+{% docs col_runtime_minutes %}
+Content runtime in minutes when supplied by the selected metadata source.
+{% enddocs %}
+
 {% docs col_genre_ids %}
 JSON array of TMDB genre identifiers awaiting normalization.
+{% enddocs %}
+
+{% docs col_source_genres %}
+Unmodified Streaming Availability genre objects retained for future mapping.
 {% enddocs %}
 
 {% docs col_original_language %}

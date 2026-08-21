@@ -1,0 +1,5 @@
+provider_key,provider_name,is_active
+netflix,Netflix,true
+disney_plus,Disney+,true
+prime_video,Prime Video,true
+apple_tv_plus,Apple TV+,true

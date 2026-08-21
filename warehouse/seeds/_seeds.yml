@@ -1,0 +1,38 @@
+version: 2
+
+seeds:
+  - name: provider_reference
+    description: >-
+      Version-controlled WatchPulse provider reference data. It maps stable
+      internal provider keys to user-facing names and controls which providers
+      are published by the serving layer.
+    config:
+      column_types:
+        provider_key: varchar
+        provider_name: varchar
+        is_active: boolean
+    meta:
+      owner: watchpulse
+      grain: one row per provider_key
+    columns:
+      - name: provider_key
+        description: "{{ doc('col_provider_key') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: [netflix, disney_plus, prime_video, apple_tv_plus]
+      - name: provider_name
+        description: "{{ doc('col_provider_name') }}"
+        data_type: varchar
+        tests: [not_null, unique]
+      - name: is_active
+        description: "{{ doc('col_provider_is_active') }}"
+        data_type: boolean
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [true, false]

@@ -19,3 +19,4 @@ warehouse/dbt_packages/
 warehouse/.user.yml
 logs/
 warehouse/package-lock.yml
+.vscode

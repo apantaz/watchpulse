@@ -2,9 +2,10 @@
 
 ## Canonical content
 
-Selects the latest retained TMDB discovery observation for each content
-identity, independent of region and provider. It is the metadata join surface
-for downstream availability models.
+Selects one metadata observation for each content identity, independent of
+region and provider. TMDB is always preferred; embedded Streaming Availability
+metadata is used only when a lifecycle title has not yet been discovered by
+TMDB. It is the metadata join surface for downstream availability models.
 
 Grain: one row per `tmdb_id + content_type`.
 

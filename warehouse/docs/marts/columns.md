@@ -13,3 +13,27 @@ Replaceable discovery ranking input, initially populated from TMDB popularity.
 {% docs col_availability_source %}
 Source that established the current or upcoming availability state.
 {% enddocs %}
+
+{% docs col_catalog_name %}
+Stable name of the serving catalog described by the freshness row.
+{% enddocs %}
+
+{% docs col_warehouse_built_at %}
+Timestamp when dbt built the candidate serving warehouse.
+{% enddocs %}
+
+{% docs col_latest_source_updated_at %}
+Newest contributing source-observation timestamp in the serving catalog.
+{% enddocs %}
+
+{% docs col_catalog_row_count %}
+Total number of rows in the serving catalog at build time.
+{% enddocs %}
+
+{% docs col_current_row_count %}
+Number of currently available rows in the serving catalog at build time.
+{% enddocs %}
+
+{% docs col_upcoming_row_count %}
+Number of upcoming rows in the serving catalog at build time.
+{% enddocs %}

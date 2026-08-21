@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: install install-hooks dbt-deps dbt-debug dbt-parse dbt-validate lint precommit pre-commit prepush pre-push syntax test coverage ci
+.PHONY: install install-hooks dbt-deps dbt-debug dbt-parse dbt-validate dbt-publish lint precommit pre-commit prepush pre-push syntax test coverage ci
 
 install:
 	$(PYTHON) -m pip install -e ".[dev,warehouse]"
@@ -18,6 +18,9 @@ dbt-parse:
 	cd warehouse && dbt parse
 
 dbt-validate: dbt-deps dbt-debug dbt-parse
+
+dbt-publish:
+	$(PYTHON) -m watchpulse.warehouse_publish
 
 lint:
 	$(PYTHON) -m ruff check .

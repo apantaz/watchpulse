@@ -100,6 +100,8 @@ availability. Staging is materialized into DuckDB tables so the database remains
 queryable without resolving the original Parquet paths at serving time. A stable
 provider dimension and the first tested `catalog_availability` mart now expose
 160 current and 30 upcoming Greece rows from the retained development data.
+Catalog freshness metadata and tested build-to-candidate atomic publication are
+implemented; failed builds and validation errors preserve the last good file.
 
 Scope:
 

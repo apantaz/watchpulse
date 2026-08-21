@@ -43,6 +43,7 @@ includes:
   availability, and upcoming availability;
 - a tested local `catalog_availability` mart with stable provider names and
   TMDB-preferred metadata;
+- catalog freshness metadata and failure-safe atomic DuckDB publication;
 - unit tests that do not make live API calls.
 
 Version `v0.2` adds Movie of the Night's Streaming Availability API v4 and
@@ -119,7 +120,8 @@ settings include:
 - `SUPPORTED_REGIONS`: comma-separated ISO country codes, such as `GR,GB`;
 - `SUPPORTED_PROVIDERS`: stable WatchPulse provider keys;
 - `LAKE_ROOT`: location of the append-only Parquet lake;
-- `DATABASE_PATH`: future DuckDB serving database path;
+- `DATABASE_PATH`: operational ingestion-state database path;
+- `WATCHPULSE_SERVING_DB_PATH`: atomically published dbt serving database;
 - discovery windows for new, recently added, and leaving-soon content.
 
 Never commit `.env`; it is ignored by Git.

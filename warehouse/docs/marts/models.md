@@ -24,3 +24,15 @@ titles that have not yet received TMDB enrichment.
 Grain: one row per content, region, provider, and monetization type.
 
 {% enddocs %}
+
+{% docs catalog_freshness %}
+
+## Catalog freshness
+
+Records when the serving warehouse was built, the newest source observation in
+the catalog, and state-level row counts. The atomic publisher validates this row
+before replacing the last known-good serving database.
+
+Grain: one row for `catalog_availability`.
+
+{% enddocs %}

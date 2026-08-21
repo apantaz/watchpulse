@@ -7,6 +7,9 @@ data/
 *.duckdb
 *.duckdb.tmp
 .pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 *.egg-info/
 .DS_Store
 .python-version

@@ -23,6 +23,7 @@ dev = [
     "detect-secrets>=1.5,<2",
     "pre-commit>=4.0",
     "pytest>=8.0",
+    "pytest-cov>=7.1,<8",
     "ruff>=0.6",
 ]
 warehouse = [
@@ -35,6 +36,12 @@ include = ["ingestion*", "watchpulse*"]
 [tool.pytest.ini_options]
 testpaths = ["ingestion/tests", "tests"]
 addopts = "-ra"
+
+[tool.coverage.run]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
 
 [tool.ruff]
 target-version = "py310"

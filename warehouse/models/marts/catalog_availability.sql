@@ -31,9 +31,9 @@ select
     content.backdrop_path,
     content.metadata_source,
     availability.source as availability_source,
-    greatest(content.source_updated_at, availability.last_updated_at) as last_updated_at
+    greatest(content.updated_at, availability.last_updated_at) as last_updated_at
 from availability
-inner join {{ ref('int_content') }} as content
+inner join {{ ref('dim_content') }} as content
     on availability.tmdb_id = content.tmdb_id
     and availability.content_type = content.content_type
 inner join {{ ref('dim_provider') }} as provider

@@ -37,3 +37,23 @@ Number of currently available rows in the serving catalog at build time.
 {% docs col_upcoming_row_count %}
 Number of upcoming rows in the serving catalog at build time.
 {% enddocs %}
+
+{% docs col_genre_id %}
+TMDB genre identifier scoped by content type.
+{% enddocs %}
+
+{% docs col_genre_name %}
+Normalized user-facing genre name.
+{% enddocs %}
+
+{% docs col_source_provider_id %}
+Provider identifier used by the named upstream source.
+{% enddocs %}
+
+{% docs col_created_at %}
+Timestamp of the earliest retained metadata observation for the content.
+{% enddocs %}
+
+{% docs col_updated_at %}
+Timestamp of the latest retained metadata observation selected for the content.
+{% enddocs %}

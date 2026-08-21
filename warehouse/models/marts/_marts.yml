@@ -136,3 +136,46 @@ models:
         description: "{{ doc('col_last_updated_at') }}"
         data_type: timestamptz
         tests: [not_null]
+
+  - name: catalog_freshness
+    description: "{{ doc('catalog_freshness') }}"
+    meta:
+      owner: watchpulse
+      grain: one row for the published catalog
+    tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "catalog_row_count = current_row_count + upcoming_row_count"
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "catalog_row_count > 0"
+    columns:
+      - name: catalog_name
+        description: "{{ doc('col_catalog_name') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: [catalog_availability]
+      - name: warehouse_built_at
+        description: "{{ doc('col_warehouse_built_at') }}"
+        data_type: timestamptz
+        tests: [not_null]
+      - name: latest_source_updated_at
+        description: "{{ doc('col_latest_source_updated_at') }}"
+        data_type: timestamptz
+        tests: [not_null]
+      - name: catalog_row_count
+        description: "{{ doc('col_catalog_row_count') }}"
+        data_type: bigint
+        tests: [not_null]
+      - name: current_row_count
+        description: "{{ doc('col_current_row_count') }}"
+        data_type: bigint
+        tests: [not_null]
+      - name: upcoming_row_count
+        description: "{{ doc('col_upcoming_row_count') }}"
+        data_type: bigint
+        tests: [not_null]

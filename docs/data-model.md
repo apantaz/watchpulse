@@ -210,6 +210,14 @@ fallback for upcoming titles not yet discovered by TMDB. Source ratings and
 temporary signed image URLs are not mapped into TMDB fields. The frontend never
 receives raw payload structures.
 
+### `catalog_freshness`
+
+Grain: one row for the published `catalog_availability` dataset.
+
+It records the warehouse build timestamp, latest contributing source timestamp,
+and total/current/upcoming row counts. The publisher checks these values against
+the physical catalog before making a candidate database live.
+
 ## Discovery semantics
 
 All sections start from the same region, provider, content type, genre, runtime,

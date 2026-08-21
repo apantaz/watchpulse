@@ -141,3 +141,30 @@ another local artifact:
 dbt build \
   --vars '{lake_root: /absolute/path/to/lake}'
 ```
+
+## Atomic publication
+
+From the repository root, build and publish the serving warehouse with:
+
+```bash
+make dbt-publish
+```
+
+The command builds and tests dbt against a uniquely named candidate DuckDB file
+in the destination directory. It then validates `catalog_availability` and
+`catalog_freshness` before atomically replacing the published file. A failed
+build or validation leaves the previous serving database untouched and removes
+the candidate.
+
+The default destination is `data/warehouse_serving.duckdb`. Override it with:
+
+```bash
+WATCHPULSE_SERVING_DB_PATH=/absolute/path/watchpulse.duckdb make dbt-publish
+```
+
+Pass `--deps` when invoking the module directly if dbt packages have not yet
+been installed:
+
+```bash
+python -m watchpulse.warehouse_publish --deps
+```

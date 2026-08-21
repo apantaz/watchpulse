@@ -9,7 +9,7 @@ on:
         default: GR
         type: string
       max_pages:
-        description: Discovery pages per provider and content type
+        description: Discovery-only pages per provider and content type
         required: true
         default: "1"
         type: string
@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   ingest:
-    name: Ingest TMDB raw data
+    name: Discover TMDB catalog
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -62,13 +62,13 @@ jobs:
             exit 1
           fi
 
-      - name: Run bounded ingestion
+      - name: Run bounded discovery-only ingestion
         run: python -m ingestion.run --country "${INGEST_COUNTRY}" --max-pages "${INGEST_MAX_PAGES}"
 
-      - name: Upload raw lake artifact
+      - name: Upload raw discovery artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tmdb-raw-${{ inputs.country }}-${{ github.run_id }}
+          name: tmdb-discovery-${{ inputs.country }}-${{ github.run_id }}
           path: data/lake/raw/
           if-no-files-found: error
           retention-days: 7

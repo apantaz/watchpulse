@@ -187,6 +187,25 @@ remain visible temporarily. The UI must show its refresh time and must not claim
 complete or real-time availability. Deferred lifecycle types can be enabled
 explicitly without changing the source adapter or event schema.
 
+## ADR-013: Separate TMDB catalog discovery from title enrichment
+
+- Status: accepted for v0.3
+- Date: 2026-08-21
+
+Decision: broad TMDB provider ingestion stores discovery pages and their basic
+title metadata without automatically calling full metadata and watch-provider
+endpoints for every result. Per-title enrichment is explicit and will become an
+incremental queue for missing, changed, or prioritized titles.
+
+Why: discovery returns 20 titles per request and already includes the fields
+needed for initial cards and ranking. Eagerly making two more calls for every
+title turns a 471-page Netflix Greece scan into roughly 19,000 requests.
+
+Consequences: discovery runs expose page/result completeness for each
+region/provider/content-type query. Runtime and richer details may be null until
+a title is enriched. A query truncated by TMDB's 500-page source ceiling cannot
+be considered complete and must later be partitioned into smaller date ranges.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

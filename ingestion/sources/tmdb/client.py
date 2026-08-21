@@ -5,8 +5,8 @@ TMDB's entire catalog, `fetch_titles` uses `discover/{movie|tv}` filtered by
 `watch_region` + `with_watch_providers` to get exactly the titles available
 on a given provider in a given country — a few thousand rows, not millions.
 Exact monetization type (subscription/rent/buy) is not in the discover
-response, so `fetch_availability` is called per unique title afterward
-(see ingestion/run.py) to get the authoritative watch/providers payload.
+response. Optional enrichment can fetch authoritative watch-provider payloads,
+but broad catalog discovery does not require those per-title calls.
 """
 
 from __future__ import annotations

@@ -91,9 +91,14 @@ paginates `new` and `upcoming`. Automatic scheduling remains deferred.
 
 Goal: turn raw source data into a tested local catalog.
 
+Current status: **in progress (2026-08-21)**. TMDB catalog discovery is being
+separated from opt-in per-title enrichment so complete provider scans scale by
+pages rather than by two additional requests per title.
+
 Scope:
 
 - initialize dbt-duckdb;
+- make TMDB discovery-only the default and report scan completeness;
 - build staging models for both sources;
 - build `dim_content`, genres, providers, mappings, availability, and events;
 - build `catalog_availability`;

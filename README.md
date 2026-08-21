@@ -188,8 +188,8 @@ The bump updates the project version and changelog and creates a `vX.Y.Z` tag.
 ## Running ingestion
 
 Start with a smoke test. It fetches one discovery page for every configured
-region, provider, and entity type, then enriches the discovered titles with
-metadata and watch-provider payloads:
+region, provider, and entity type. Discovery-only is the default, so this makes
+no per-title metadata or watch-provider requests:
 
 ```bash
 python -m ingestion.run --max-pages 1
@@ -199,6 +199,14 @@ Run the complete configured catalog ingestion with:
 
 ```bash
 python -m ingestion.run
+```
+
+The summary reports expected/fetched pages and whether every provider/content
+query completed. Full per-title enrichment is deliberately opt-in and should
+only be used for a bounded set while the incremental enrichment queue is built:
+
+```bash
+python -m ingestion.run --max-pages 1 --enrich
 ```
 
 To override the configured regions for one run, repeat `--country`:

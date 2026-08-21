@@ -29,6 +29,13 @@ def _create_candidate(path: Path, catalog_rows: int = 2) -> None:
             """,
             [catalog_rows, catalog_rows],
         )
+        connection.execute("create schema main_intermediate")
+        connection.execute(
+            """
+            create view main_intermediate.int_content as
+            select * from main_marts.catalog_availability
+            """
+        )
 
 
 def test_publish_replaces_output_only_after_validation(tmp_path: Path) -> None:
@@ -41,13 +48,18 @@ def test_publish_replaces_output_only_after_validation(tmp_path: Path) -> None:
         assert command == ("dbt", "build")
         assert cwd == project_dir
         candidate_path = Path(environment["WATCHPULSE_DBT_PATH"])
-        assert candidate_path.stem.isidentifier()
+        assert candidate_path.name == output_path.name
+        assert candidate_path.parent != output_path.parent
         _create_candidate(candidate_path)
 
     published = publish_warehouse(project_dir, output_path, runner=runner)
 
     assert published == output_path
     validate_candidate(output_path)
+    with duckdb.connect(str(output_path), read_only=True) as connection:
+        assert connection.execute(
+            "select count(*) from main_intermediate.int_content"
+        ).fetchone() == (2,)
 
 
 def test_failed_build_preserves_previous_output(tmp_path: Path) -> None:
@@ -64,7 +76,7 @@ def test_failed_build_preserves_previous_output(tmp_path: Path) -> None:
         publish_warehouse(project_dir, output_path, runner=failing_runner)
 
     assert output_path.read_bytes() == original
-    assert not list(tmp_path.glob("serving_candidate_*.duckdb"))
+    assert not list(tmp_path.glob(".warehouse_candidate_*"))
 
 
 def test_failed_validation_preserves_previous_output(tmp_path: Path) -> None:
@@ -81,4 +93,4 @@ def test_failed_validation_preserves_previous_output(tmp_path: Path) -> None:
         publish_warehouse(project_dir, output_path, runner=runner)
 
     assert output_path.read_bytes() == original
-    assert not list(tmp_path.glob("serving_candidate_*.duckdb"))
+    assert not list(tmp_path.glob(".warehouse_candidate_*"))

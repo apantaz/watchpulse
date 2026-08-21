@@ -150,11 +150,12 @@ From the repository root, build and publish the serving warehouse with:
 make dbt-publish
 ```
 
-The command builds and tests dbt against a uniquely named candidate DuckDB file
-in the destination directory. It then validates `catalog_availability` and
-`catalog_freshness` before atomically replacing the published file. A failed
-build or validation leaves the previous serving database untouched and removes
-the candidate.
+The command builds and tests dbt against a candidate with the final database
+filename inside a temporary sibling directory. Keeping the filename stable is
+required because DuckDB views retain their catalog name. It then validates
+`catalog_availability` and `catalog_freshness` before atomically replacing the
+published file. A failed build or validation leaves the previous serving
+database untouched and removes the candidate directory.
 
 The default destination is `data/warehouse_serving.duckdb`. Override it with:
 

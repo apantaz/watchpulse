@@ -66,14 +66,8 @@ def publish_warehouse(
         raise ValueError("Published warehouse path must end with .duckdb")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, candidate_name = tempfile.mkstemp(
-        dir=output_path.parent,
-        prefix=f"{output_path.stem}_candidate_",
-        suffix=".duckdb",
-    )
-    os.close(descriptor)
-    candidate_path = Path(candidate_name)
-    candidate_path.unlink()
+    candidate_dir = Path(tempfile.mkdtemp(dir=output_path.parent, prefix=".warehouse_candidate_"))
+    candidate_path = candidate_dir / output_path.name
 
     environment = os.environ.copy()
     environment["WATCHPULSE_DBT_PATH"] = str(candidate_path)
@@ -87,6 +81,7 @@ def publish_warehouse(
         return output_path
     finally:
         candidate_path.unlink(missing_ok=True)
+        candidate_dir.rmdir()
 
 
 def build_parser() -> argparse.ArgumentParser:

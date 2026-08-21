@@ -26,7 +26,8 @@ Documentation is split by responsibility:
 
 ## Project status
 
-Version `v0.2` is complete pending merge. The repository currently includes:
+Version `v0.2` is released and `v0.3` is in progress. The repository currently
+includes:
 
 - configurable TMDB discovery by region and provider;
 - full movie and TV metadata ingestion;
@@ -37,6 +38,7 @@ Version `v0.2` is complete pending merge. The repository currently includes:
 - append-only raw Parquet storage;
 - retrying and rate-limited HTTP access;
 - source-independent content and provider models;
+- dbt-duckdb staging models for TMDB discovery and streaming events;
 - unit tests that do not make live API calls.
 
 Version `v0.2` adds Movie of the Night's Streaming Availability API v4 and
@@ -66,6 +68,13 @@ pyenv virtualenv 3.12.13 watchpulse   # skip if already created
 pyenv local watchpulse
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
+```
+
+Install the optional dbt/DuckDB warehouse toolchain when working on v0.3 data
+models:
+
+```bash
+python -m pip install -e ".[dev,warehouse]"
 ```
 
 If you prefer a different Python 3.12 patch release, create the `watchpulse`
@@ -137,13 +146,14 @@ python -m pip install -r requirements.txt
 After installing the development dependencies, install both repository hooks:
 
 ```bash
-python -m pre_commit install --hook-type pre-commit --hook-type pre-push --hook-type commit-msg
+make install-hooks
 ```
 
 The hooks are intentionally split by cost:
 
 - before commit: direct commits to `main`/`master` are blocked, Ruff checks
-  staged Python, and `detect-secrets` scans staged text files;
+  staged Python, `detect-secrets` scans staged text files, and dbt changes are
+  compiled with their documentation catalog generated;
 - before push: the complete offline pytest suite runs.
 - commit message: Commitizen enforces Conventional Commits.
 
@@ -160,9 +170,19 @@ ever staged or committed.
 Run either stage manually when needed:
 
 ```bash
-python -m pre_commit run --all-files --hook-stage pre-commit
-python -m pre_commit run --all-files --hook-stage pre-push
+make precommit
+make prepush
 ```
+
+Install the pinned dbt packages once before the first dbt hook run, or whenever
+`warehouse/packages.yml` changes:
+
+```bash
+make dbt-deps
+```
+
+GitHub Actions runs `make ci`, which includes the same `make precommit` target
+as local development plus dbt parsing, Python compilation, and tests.
 
 Hooks use the active project environment, so run
 `python -m pip install -e ".[dev]"` after dependency changes.

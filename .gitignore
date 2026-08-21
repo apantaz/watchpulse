@@ -10,3 +10,9 @@ data/
 *.egg-info/
 .DS_Store
 .python-version
+warehouse/target/
+warehouse/logs/
+warehouse/dbt_packages/
+warehouse/.user.yml
+logs/
+warehouse/package-lock.yml

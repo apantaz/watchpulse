@@ -25,6 +25,9 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.6",
 ]
+warehouse = [
+    "dbt-duckdb>=1.9,<2",
+]
 
 [tool.setuptools.packages.find]
 include = ["ingestion*", "watchpulse*"]

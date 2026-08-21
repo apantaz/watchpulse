@@ -39,6 +39,8 @@ includes:
 - retrying and rate-limited HTTP access;
 - source-independent content and provider models;
 - dbt-duckdb staging models for TMDB discovery and streaming events;
+- dbt intermediate models for canonical content, lifecycle events, current
+  availability, and upcoming availability;
 - unit tests that do not make live API calls.
 
 Version `v0.2` adds Movie of the Night's Streaming Availability API v4 and
@@ -152,9 +154,10 @@ make install-hooks
 The hooks are intentionally split by cost:
 
 - before commit: direct commits to `main`/`master` are blocked, Ruff checks
-  staged Python, `detect-secrets` scans staged text files, and dbt changes are
-  compiled with their documentation catalog generated;
-- before push: the complete offline pytest suite runs.
+  and formats Python, repository hygiene checks run, `detect-secrets` scans
+  staged text files, and dbt is compiled with its documentation generated;
+- before push: direct pushes to `main`/`master` are blocked and the complete
+  offline pytest suite runs with coverage enforcement;
 - commit message: Commitizen enforces Conventional Commits.
 
 Secret detection uses the committed `.secrets.baseline`. If a legitimate test
@@ -188,10 +191,11 @@ Install the pinned dbt packages once before the first dbt hook run, or whenever
 make dbt-deps
 ```
 
-GitHub Actions runs `make ci`, which includes the same pre-commit hook stage as
-local development plus dbt parsing, Python compilation, and coverage-gated
-tests. CI skips only `no-commit-to-branch`, because validating an existing
-commit on `master` is not the same operation as creating a local commit there.
+GitHub Actions does not invoke Git branch-protection hooks. It runs the same
+underlying lint and coverage Make targets directly, then validates the dbt
+foundation with `dbt deps`, `dbt debug`, and `dbt parse` against a temporary
+DuckDB file. Branch protection therefore remains a local commit/push safeguard
+and needs no CI exclusion.
 
 Hooks use the active project environment, so run
 `python -m pip install -e ".[dev]"` after dependency changes.

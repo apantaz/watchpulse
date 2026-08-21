@@ -5,7 +5,7 @@ models:
     description: "{{ doc('int_content') }}"
     meta:
       owner: watchpulse
-      source: tmdb
+      source: tmdb_preferred_with_streaming_fallback
       grain: one row per tmdb_id and content_type
     tests:
       - dbt_utils.unique_combination_of_columns:
@@ -37,6 +37,22 @@ models:
       - name: release_date
         description: "{{ doc('col_release_date') }}"
         data_type: date
+      - name: release_year
+        description: "{{ doc('col_release_year') }}"
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1800
+                max_value: 2100
+      - name: runtime_minutes
+        description: "{{ doc('col_runtime_minutes') }}"
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 1440
       - name: genre_ids
         description: "{{ doc('col_genre_ids') }}"
         data_type: json
@@ -55,7 +71,6 @@ models:
         description: "{{ doc('col_vote_count') }}"
         data_type: bigint
         tests:
-          - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               arguments:
                 min_value: 0
@@ -72,6 +87,14 @@ models:
       - name: backdrop_path
         description: "{{ doc('col_backdrop_path') }}"
         data_type: varchar
+      - name: metadata_source
+        description: "{{ doc('col_metadata_source') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [tmdb, streaming_availability]
       - name: first_observed_at
         description: "{{ doc('col_first_observed_at') }}"
         data_type: timestamptz

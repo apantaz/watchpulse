@@ -153,3 +153,64 @@ models:
         description: "{{ doc('col_ingested_at') }}"
         data_type: timestamptz
         tests: [not_null]
+
+  - name: stg_streaming_shows
+    description: "{{ doc('stg_streaming_shows') }}"
+    meta:
+      owner: watchpulse
+      source: streaming_availability
+      grain: one row per tmdb_id and content_type
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [tmdb_id, content_type]
+    columns:
+      - name: tmdb_id
+        description: "{{ doc('col_tmdb_id') }}"
+        data_type: bigint
+        tests: [not_null]
+      - name: content_type
+        description: "{{ doc('col_content_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [movie, tv]
+      - name: title
+        description: "{{ doc('col_title') }}"
+        data_type: varchar
+        tests: [not_null]
+      - name: original_title
+        description: "{{ doc('col_original_title') }}"
+        data_type: varchar
+      - name: overview
+        description: "{{ doc('col_overview') }}"
+        data_type: varchar
+      - name: release_year
+        description: "{{ doc('col_release_year') }}"
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1800
+                max_value: 2100
+      - name: runtime_minutes
+        description: "{{ doc('col_runtime_minutes') }}"
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 1440
+      - name: source_genres
+        description: "{{ doc('col_source_genres') }}"
+        data_type: json
+      - name: source_updated_at
+        description: "{{ doc('col_source_updated_at') }}"
+        data_type: timestamptz
+        tests: [not_null]
+      - name: source_file
+        description: "{{ doc('col_source_file') }}"
+        data_type: varchar
+        tests: [not_null]

@@ -41,6 +41,8 @@ includes:
 - dbt-duckdb staging models for TMDB discovery and streaming events;
 - dbt intermediate models for canonical content, lifecycle events, current
   availability, and upcoming availability;
+- a tested local `catalog_availability` mart with stable provider names and
+  TMDB-preferred metadata;
 - unit tests that do not make live API calls.
 
 Version `v0.2` adds Movie of the Night's Streaming Availability API v4 and

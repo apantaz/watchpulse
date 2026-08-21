@@ -97,7 +97,9 @@ models for TMDB discovery and normalized streaming events are implemented. The
 first intermediate models now provide canonical content, normalized lifecycle
 events, TMDB-derived current availability, and non-overlapping upcoming
 availability. Staging is materialized into DuckDB tables so the database remains
-queryable without resolving the original Parquet paths at serving time.
+queryable without resolving the original Parquet paths at serving time. A stable
+provider dimension and the first tested `catalog_availability` mart now expose
+160 current and 30 upcoming Greece rows from the retained development data.
 
 Scope:
 

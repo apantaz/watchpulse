@@ -52,6 +52,7 @@ Grain: one row per `tmdb_id` and `content_type`.
 | `original_title` | text | Original movie/show name |
 | `overview` | text | Nullable |
 | `release_date` | date | Movie release or TV first-air date |
+| `release_year` | integer | Derived from the full date or supplied by a fallback source |
 | `runtime_minutes` | integer | Nullable; positive when present |
 | `original_language` | text | ISO-style language code when supplied |
 | `tmdb_rating` | decimal | Nullable; between 0 and 10 |
@@ -59,6 +60,7 @@ Grain: one row per `tmdb_id` and `content_type`.
 | `tmdb_popularity` | decimal | Nullable; non-negative |
 | `poster_path` | text | Nullable TMDB image path |
 | `backdrop_path` | text | Nullable TMDB image path |
+| `metadata_source` | text | Selected source; TMDB is preferred |
 | `source_updated_at` | timestamp | Latest known source update |
 | `created_at` | timestamp | First normalized observation |
 | `updated_at` | timestamp | Latest normalized observation |
@@ -153,10 +155,9 @@ Grain: one distinct lifecycle event reported or derived by WatchPulse.
 Update strategy: append-only with deterministic deduplication. Current upstream
 state never deletes old events.
 
-Before dbt materializes this model in v0.3, v0.2 persists the same normalized
-contract as append-only Parquet under `data/lake/events`, partitioned by source,
-region, and ingestion date. Deterministic `event_id` values allow downstream
-deduplication without discarding raw observations.
+The normalized contract is persisted as append-only Parquet under
+`data/lake/events`, partitioned by source, region, and ingestion date. dbt
+deduplicates these observations without discarding raw history.
 
 ### `title_daily_metrics`
 
@@ -196,14 +197,18 @@ Grain: one content, region, provider, and monetization type serving row.
 It denormalizes fields needed by filters and title cards:
 
 ```text
-tmdb_id, content_type, title, overview, release_date, runtime_minutes,
+tmdb_id, content_type, title, overview, release_date, release_year, runtime_minutes,
 original_language, genres, tmdb_rating, vote_count, popularity_score,
 region, provider_key, provider_name, monetization_type, available_since,
 available_from, expires_on, is_available, is_upcoming, poster_path,
-backdrop_path, source_updated_at, last_successful_refresh_at
+backdrop_path, metadata_source, availability_source, last_updated_at
 ```
 
-The frontend never receives raw payload structures.
+The implemented dbt mart contains current and upcoming availability. TMDB is
+the preferred metadata source; embedded lifecycle metadata is an explicit
+fallback for upcoming titles not yet discovered by TMDB. Source ratings and
+temporary signed image URLs are not mapped into TMDB fields. The frontend never
+receives raw payload structures.
 
 ## Discovery semantics
 

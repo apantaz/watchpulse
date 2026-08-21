@@ -206,6 +206,23 @@ region/provider/content-type query. Runtime and richer details may be null until
 a title is enriched. A query truncated by TMDB's 500-page source ceiling cannot
 be considered complete and must later be partitioned into smaller date ranges.
 
+## ADR-014: TMDB-preferred metadata with lifecycle fallback
+
+- Status: accepted for v0.3
+- Date: 2026-08-21
+
+Decision: canonical content selects TMDB metadata whenever it exists. For an
+upcoming lifecycle title not yet present in TMDB discovery data, WatchPulse uses
+the basic title, overview, release year, and runtime embedded in the retained
+Streaming Availability response until TMDB enrichment becomes available.
+
+Why: lifecycle announcements can precede catalog discovery. Dropping unmatched
+rows would make valid upcoming titles invisible in the serving catalog.
+
+Consequences: `metadata_source` is exposed for lineage. Streaming ratings are
+not treated as TMDB ratings, temporary signed image URLs are excluded, and
+source genres remain unmapped until a normalized genre dimension exists.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

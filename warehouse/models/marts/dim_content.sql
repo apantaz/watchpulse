@@ -1,0 +1,20 @@
+select
+    tmdb_id,
+    content_type,
+    title,
+    original_title,
+    overview,
+    release_date,
+    release_year,
+    runtime_minutes,
+    genre_ids,
+    original_language,
+    tmdb_rating,
+    vote_count,
+    tmdb_popularity,
+    poster_path,
+    backdrop_path,
+    metadata_source,
+    first_observed_at as created_at,
+    source_updated_at as updated_at
+from {{ ref('int_content') }}

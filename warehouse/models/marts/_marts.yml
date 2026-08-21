@@ -179,3 +179,163 @@ models:
         description: "{{ doc('col_upcoming_row_count') }}"
         data_type: bigint
         tests: [not_null]
+
+  - name: dim_content
+    description: "{{ doc('dim_content') }}"
+    meta:
+      owner: watchpulse
+      grain: one row per tmdb_id and content_type
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [tmdb_id, content_type]
+    columns:
+      - {name: tmdb_id, description: "{{ doc('col_tmdb_id') }}", data_type: bigint, tests: [not_null]}
+      - name: content_type
+        description: "{{ doc('col_content_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [movie, tv]}
+      - {name: title, description: "{{ doc('col_title') }}", data_type: varchar, tests: [not_null]}
+      - {name: original_title, description: "{{ doc('col_original_title') }}", data_type: varchar}
+      - {name: overview, description: "{{ doc('col_overview') }}", data_type: varchar}
+      - {name: release_date, description: "{{ doc('col_release_date') }}", data_type: date}
+      - {name: release_year, description: "{{ doc('col_release_year') }}", data_type: integer}
+      - {name: runtime_minutes, description: "{{ doc('col_runtime_minutes') }}", data_type: integer}
+      - {name: genre_ids, description: "{{ doc('col_genre_ids') }}", data_type: json}
+      - {name: original_language, description: "{{ doc('col_original_language') }}", data_type: varchar}
+      - {name: tmdb_rating, description: "{{ doc('col_tmdb_rating') }}", data_type: double}
+      - {name: vote_count, description: "{{ doc('col_vote_count') }}", data_type: bigint}
+      - {name: tmdb_popularity, description: "{{ doc('col_tmdb_popularity') }}", data_type: double}
+      - {name: poster_path, description: "{{ doc('col_poster_path') }}", data_type: varchar}
+      - {name: backdrop_path, description: "{{ doc('col_backdrop_path') }}", data_type: varchar}
+      - name: metadata_source
+        description: "{{ doc('col_metadata_source') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [tmdb, streaming_availability]}
+      - {name: created_at, description: "{{ doc('col_created_at') }}", data_type: timestamptz, tests: [not_null]}
+      - {name: updated_at, description: "{{ doc('col_updated_at') }}", data_type: timestamptz, tests: [not_null]}
+
+  - name: content_genres
+    description: "{{ doc('content_genres') }}"
+    meta:
+      owner: watchpulse
+      grain: one row per content and genre
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [tmdb_id, content_type, genre_id]
+    columns:
+      - {name: tmdb_id, description: "{{ doc('col_tmdb_id') }}", data_type: bigint, tests: [not_null]}
+      - name: content_type
+        description: "{{ doc('col_content_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [movie, tv]}
+      - {name: genre_id, description: "{{ doc('col_genre_id') }}", data_type: integer, tests: [not_null]}
+      - {name: genre_name, description: "{{ doc('col_genre_name') }}", data_type: varchar, tests: [not_null]}
+
+  - name: provider_source_map
+    description: "{{ doc('provider_source_map') }}"
+    meta:
+      owner: watchpulse
+      grain: one row per provider, source, source ID, and region
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [provider_key, source, source_provider_id, region]
+    columns:
+      - name: provider_key
+        description: "{{ doc('col_provider_key') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_provider'), field: provider_key}
+      - {name: source, description: "{{ doc('col_source') }}", data_type: varchar, tests: [not_null]}
+      - {name: source_provider_id, description: "{{ doc('col_source_provider_id') }}", data_type: varchar, tests: [not_null]}
+      - {name: region, description: "{{ doc('col_region') }}", data_type: varchar, tests: [not_null]}
+
+  - name: streaming_availability
+    description: "{{ doc('streaming_availability') }}"
+    meta:
+      owner: watchpulse
+      grain: one row per content, region, provider, and monetization type
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [tmdb_id, content_type, region, provider_key, monetization_type]
+      - dbt_utils.expression_is_true:
+          arguments: {expression: "is_available <> is_upcoming"}
+    columns:
+      - {name: tmdb_id, description: "{{ doc('col_tmdb_id') }}", data_type: bigint, tests: [not_null]}
+      - name: content_type
+        description: "{{ doc('col_content_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [movie, tv]}
+      - {name: region, description: "{{ doc('col_region') }}", data_type: varchar, tests: [not_null]}
+      - name: provider_key
+        description: "{{ doc('col_provider_key') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_provider'), field: provider_key}
+      - {name: monetization_type, description: "{{ doc('col_monetization_type') }}", data_type: varchar, tests: [not_null]}
+      - {name: available_since, description: "{{ doc('col_available_since') }}", data_type: timestamptz}
+      - {name: available_from, description: "{{ doc('col_available_from') }}", data_type: timestamptz}
+      - {name: expires_on, description: "{{ doc('col_expires_on') }}", data_type: timestamptz}
+      - {name: is_available, description: "{{ doc('col_is_available') }}", data_type: boolean, tests: [not_null]}
+      - {name: is_upcoming, description: "{{ doc('col_is_upcoming') }}", data_type: boolean, tests: [not_null]}
+      - {name: source, description: "{{ doc('col_source') }}", data_type: varchar, tests: [not_null]}
+      - {name: last_updated_at, description: "{{ doc('col_last_updated_at') }}", data_type: timestamptz, tests: [not_null]}
+
+  - name: streaming_events
+    description: "{{ doc('streaming_events') }}"
+    meta:
+      owner: watchpulse
+      grain: one row per event_id
+    columns:
+      - {name: event_id, description: "{{ doc('col_event_id') }}", data_type: varchar, tests: [not_null, unique]}
+      - {name: tmdb_id, description: "{{ doc('col_tmdb_id') }}", data_type: bigint, tests: [not_null]}
+      - name: content_type
+        description: "{{ doc('col_content_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [movie, tv]}
+      - {name: region, description: "{{ doc('col_region') }}", data_type: varchar, tests: [not_null]}
+      - name: provider_key
+        description: "{{ doc('col_provider_key') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_provider'), field: provider_key}
+      - {name: monetization_type, description: "{{ doc('col_monetization_type') }}", data_type: varchar, tests: [not_null]}
+      - name: event_type
+        description: "{{ doc('col_event_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [new, removed, updated, expiring, upcoming]
+      - {name: event_date, description: "{{ doc('col_event_date') }}", data_type: timestamptz}
+      - {name: available_from, description: "{{ doc('col_available_from') }}", data_type: timestamptz}
+      - {name: expires_on, description: "{{ doc('col_expires_on') }}", data_type: timestamptz}
+      - {name: event_effective_at, description: "{{ doc('col_event_effective_at') }}", data_type: timestamptz}
+      - {name: source, description: "{{ doc('col_source') }}", data_type: varchar, tests: [not_null]}
+      - {name: source_event_id, description: "{{ doc('col_source_event_id') }}", data_type: varchar}
+      - {name: ingested_at, description: "{{ doc('col_ingested_at') }}", data_type: timestamptz, tests: [not_null]}

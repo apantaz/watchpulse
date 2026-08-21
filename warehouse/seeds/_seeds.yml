@@ -36,3 +36,78 @@ seeds:
           - accepted_values:
               arguments:
                 values: [true, false]
+
+  - name: genre_reference
+    description: Version-controlled TMDB genre names by content type.
+    config:
+      column_types:
+        content_type: varchar
+        genre_id: integer
+        genre_name: varchar
+    meta:
+      owner: watchpulse
+      grain: one row per content_type and genre_id
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [content_type, genre_id]
+    columns:
+      - name: content_type
+        description: "{{ doc('col_content_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [movie, tv]
+      - name: genre_id
+        description: "{{ doc('col_genre_id') }}"
+        data_type: integer
+        tests: [not_null]
+      - name: genre_name
+        description: "{{ doc('col_genre_name') }}"
+        data_type: varchar
+        tests: [not_null]
+
+  - name: provider_source_reference
+    description: Version-controlled crosswalk from upstream provider IDs to WatchPulse keys.
+    config:
+      column_types:
+        provider_key: varchar
+        source: varchar
+        source_provider_id: varchar
+        region: varchar
+    meta:
+      owner: watchpulse
+      grain: one row per provider_key, source, source_provider_id, and region
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              [provider_key, source, source_provider_id, region]
+    columns:
+      - name: provider_key
+        description: "{{ doc('col_provider_key') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('provider_reference')
+                field: provider_key
+      - name: source
+        description: "{{ doc('col_source') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [tmdb, streaming_availability]
+      - name: source_provider_id
+        description: "{{ doc('col_source_provider_id') }}"
+        data_type: varchar
+        tests: [not_null]
+      - name: region
+        description: "{{ doc('col_region') }}"
+        data_type: varchar
+        tests: [not_null]

@@ -44,6 +44,7 @@ includes:
 - a tested local `catalog_availability` mart with stable provider names and
   TMDB-preferred metadata;
 - catalog freshness metadata and failure-safe atomic DuckDB publication;
+- normalized content, genre, provider-source, availability, and event marts;
 - unit tests that do not make live API calls.
 
 Version `v0.2` adds Movie of the Night's Streaming Availability API v4 and

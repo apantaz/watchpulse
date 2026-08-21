@@ -102,6 +102,9 @@ provider dimension and the first tested `catalog_availability` mart now expose
 160 current and 30 upcoming Greece rows from the retained development data.
 Catalog freshness metadata and tested build-to-candidate atomic publication are
 implemented; failed builds and validation errors preserve the last good file.
+The remaining normalized contracts are now implemented as `dim_content`,
+`content_genres`, `provider_source_map`, `streaming_availability`, and
+`streaming_events`, backed by version-controlled reference seeds and dbt tests.
 
 Scope:
 
@@ -175,6 +178,8 @@ Scope:
 - visible run status, freshness, and failure notification;
 - backend/frontend deployment;
 - production configuration and secret management;
+- replace the bootstrap genre seed with scheduled TMDB genre-reference
+  ingestion, change detection, and unknown-genre alerts;
 - architecture diagram and operational documentation.
 
 Exit criteria:

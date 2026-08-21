@@ -1,0 +1,9 @@
+provider_key,source,source_provider_id,region
+netflix,tmdb,8,GR
+disney_plus,tmdb,337,GR
+prime_video,tmdb,119,GR
+apple_tv_plus,tmdb,350,GR
+netflix,streaming_availability,netflix,GR
+disney_plus,streaming_availability,disney,GR
+prime_video,streaming_availability,prime,GR
+apple_tv_plus,streaming_availability,apple,GR

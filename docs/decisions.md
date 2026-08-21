@@ -223,6 +223,29 @@ Consequences: `metadata_source` is exposed for lineage. Streaming ratings are
 not treated as TMDB ratings, temporary signed image URLs are excluded, and
 source genres remain unmapped until a normalized genre dimension exists.
 
+## ADR-015: Replace the genre seed with ingested TMDB reference data
+
+- Status: accepted for a later ingestion increment
+- Date: 2026-08-21
+
+Decision: the v0.3 `genre_reference.csv` seed is a bootstrap reference, not the
+permanent genre source of truth. A later scheduled job will ingest TMDB genre
+definitions into immutable raw Parquet, followed by `stg_tmdb_genres` and a
+historically observable `dim_genre`. `content_genres` will continue to expand
+title genre arrays locally and join them to that dimension.
+
+Why: new combinations of known genre IDs already require no maintenance, but a
+new ID, a new content-type/ID pairing, or a renamed genre should be detected and
+tracked without requiring a code release or manual seed edit.
+
+Consequences:
+
+- store `first_observed_at`, `last_observed_at`, and the latest genre name;
+- alert on new IDs, content-type pairings, and renamed labels;
+- retain the last successfully published genre dimension when ingestion fails;
+- keep a strict unknown-genre test so incomplete candidates cannot be published;
+- retain the seed only as a bootstrap/fallback fixture once ingestion exists.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

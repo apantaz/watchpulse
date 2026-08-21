@@ -1,0 +1,36 @@
+content_type,genre_id,genre_name
+movie,12,Adventure
+movie,14,Fantasy
+movie,16,Animation
+movie,18,Drama
+movie,27,Horror
+movie,28,Action
+movie,35,Comedy
+movie,36,History
+movie,37,Western
+movie,53,Thriller
+movie,80,Crime
+movie,99,Documentary
+movie,878,Science Fiction
+movie,9648,Mystery
+movie,10402,Music
+movie,10749,Romance
+movie,10751,Family
+movie,10752,War
+movie,10770,TV Movie
+tv,16,Animation
+tv,18,Drama
+tv,35,Comedy
+tv,37,Western
+tv,80,Crime
+tv,99,Documentary
+tv,9648,Mystery
+tv,10751,Family
+tv,10759,Action & Adventure
+tv,10762,Kids
+tv,10763,News
+tv,10764,Reality
+tv,10765,Sci-Fi & Fantasy
+tv,10766,Soap
+tv,10767,Talk
+tv,10768,War & Politics

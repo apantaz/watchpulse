@@ -1,6 +1,7 @@
 # WatchPulse Data Model
 
-Status: proposed MVP contract. This document owns table grains, keys, field
+Status: implemented v0.3 warehouse contract with later-version extensions
+identified where applicable. This document owns table grains, keys, field
 semantics, and historical behavior.
 
 ## Modeling principles
@@ -60,6 +61,7 @@ Grain: one row per `tmdb_id` and `content_type`.
 | `tmdb_popularity` | decimal | Nullable; non-negative |
 | `poster_path` | text | Nullable TMDB image path |
 | `backdrop_path` | text | Nullable TMDB image path |
+| `metadata_source` | text | TMDB preferred; lifecycle metadata fallback |
 | `metadata_source` | text | Selected source; TMDB is preferred |
 | `source_updated_at` | timestamp | Latest known source update |
 | `created_at` | timestamp | First normalized observation |
@@ -79,7 +81,25 @@ Grain: one row per content and genre.
 | `genre_id` | integer | Source genre identifier |
 | `genre_name` | text | Normalized display name |
 
-Primary key: `tmdb_id`, `content_type`, `genre_id`.
+Primary key: `tmdb_id`, `content_type`, `genre_id`. The v0.3 dbt model expands
+TMDB genre arrays and requires every retained identifier to map to the
+version-controlled genre reference seed.
+
+The seed is intentionally temporary. The planned replacement is:
+
+```text
+TMDB genre definitions
+    -> scheduled ingestion
+    -> immutable raw genre Parquet
+    -> stg_tmdb_genres
+    -> dim_genre
+    -> content_genres
+```
+
+The future `dim_genre` will track first/last observation and name changes. New
+combinations of already-known genres need no special handling today; only an
+unknown content-type/genre-ID pair fails the strict mapping test and preserves
+the previous published database. See ADR-015.
 
 ### `dim_provider`
 
@@ -106,6 +126,10 @@ Grain: one row per provider, source, and optional region-specific mapping.
 
 Primary key: `provider_key`, `source`, `source_provider_id`, `region` with a
 documented null-safe implementation in dbt.
+
+The v0.3 crosswalk contains the four launch providers for both TMDB and
+Streaming Availability in Greece. Adding a region or source requires explicit
+seed rows and relationship tests rather than application-facing ID changes.
 
 ### `streaming_availability`
 

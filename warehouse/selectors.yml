@@ -1,0 +1,6 @@
+selectors:
+  - name: staging
+    description: Build and test all staging models and their direct tests.
+    definition:
+      method: path
+      value: models/staging

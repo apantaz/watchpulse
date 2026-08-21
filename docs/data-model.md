@@ -85,6 +85,22 @@ Primary key: `tmdb_id`, `content_type`, `genre_id`. The v0.3 dbt model expands
 TMDB genre arrays and requires every retained identifier to map to the
 version-controlled genre reference seed.
 
+The seed is intentionally temporary. The planned replacement is:
+
+```text
+TMDB genre definitions
+    -> scheduled ingestion
+    -> immutable raw genre Parquet
+    -> stg_tmdb_genres
+    -> dim_genre
+    -> content_genres
+```
+
+The future `dim_genre` will track first/last observation and name changes. New
+combinations of already-known genres need no special handling today; only an
+unknown content-type/genre-ID pair fails the strict mapping test and preserves
+the previous published database. See ADR-015.
+
 ### `dim_provider`
 
 Grain: one row per stable WatchPulse provider.

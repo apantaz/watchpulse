@@ -178,6 +178,8 @@ Scope:
 - visible run status, freshness, and failure notification;
 - backend/frontend deployment;
 - production configuration and secret management;
+- replace the bootstrap genre seed with scheduled TMDB genre-reference
+  ingestion, change detection, and unknown-genre alerts;
 - architecture diagram and operational documentation.
 
 Exit criteria:

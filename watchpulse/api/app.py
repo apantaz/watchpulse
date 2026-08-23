@@ -27,6 +27,7 @@ def create_app(
         description="Read-only discovery over the locally published WatchPulse catalog.",
     )
     app.state.catalog_repository = catalog_repository
+    app.state.settings = resolved_settings
 
     @app.exception_handler(CatalogUnavailableError)
     async def catalog_unavailable(

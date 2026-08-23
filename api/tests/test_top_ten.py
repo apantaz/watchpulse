@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import httpx
 from fastapi import FastAPI
@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from watchpulse.api import create_app
 from watchpulse.api.query import AvailabilityState, DiscoveryRequest, DiscoverySort
 from watchpulse.api.repository import CatalogAvailability, CatalogItem, CatalogRepository
+from watchpulse.config import Settings
 
 
 class FakeRepository(CatalogRepository):
@@ -147,3 +148,39 @@ def test_top_ten_filter_contract_is_visible_in_openapi() -> None:
         "rating_min",
         "language",
     }
+
+
+def test_new_releases_uses_content_release_window_not_provider_date() -> None:
+    repository = FakeRepository((_item(1, "New", 20),))
+    settings = Settings.from_env({"SUPPORTED_REGIONS": "GR", "NEW_RELEASE_DAYS": "30"})
+    app = create_app(settings=settings, repository=repository)
+
+    response = _get(
+        app,
+        "/api/v1/discovery/new-releases",
+        [("region", "GR"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 200
+    assert repository.request is not None
+    assert repository.request.availability is AvailabilityState.CURRENT
+    assert repository.request.sort is DiscoverySort.RELEASE_DATE
+    assert repository.request.limit == 20
+    assert repository.request.release_date_to == date.today()
+    assert repository.request.release_date_from == date.today() - timedelta(days=30)
+    assert response.json()["section"] == "new_releases"
+    assert response.json()["window_days"] == 30
+    assert response.json()["count"] == 1
+    assert "rank" not in response.json()["items"][0]
+
+
+def test_new_releases_filter_contract_is_visible_in_openapi() -> None:
+    app = create_app(repository=FakeRepository())
+
+    schema = _get(app, "/openapi.json").json()
+    operation = schema["paths"]["/api/v1/discovery/new-releases"]["get"]
+    parameters = {parameter["name"] for parameter in operation["parameters"]}
+
+    assert "region" in parameters
+    assert "providers" in parameters
+    assert "release_year_from" in parameters

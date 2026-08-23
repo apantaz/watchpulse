@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from enum import Enum
 from typing import Any
 
@@ -30,12 +31,20 @@ class DiscoveryRequest:
     sort: DiscoverySort = DiscoverySort.POPULARITY
     limit: int = 20
     offset: int = 0
+    release_date_from: date | None = None
+    release_date_to: date | None = None
 
     def __post_init__(self) -> None:
         if not 1 <= self.limit <= 100:
             raise ValueError("limit must be between 1 and 100")
         if self.offset < 0:
             raise ValueError("offset must be zero or greater")
+        if (
+            self.release_date_from is not None
+            and self.release_date_to is not None
+            and self.release_date_from > self.release_date_to
+        ):
+            raise ValueError("release_date_from must be before or equal to release_date_to")
 
 
 @dataclass(frozen=True)
@@ -102,6 +111,12 @@ class DiscoveryQueryBuilder:
         if filters.language is not None:
             predicates.append("catalog.original_language = ?")
             parameters.append(filters.language)
+        if request.release_date_from is not None:
+            predicates.append("catalog.release_date >= ?")
+            parameters.append(request.release_date_from)
+        if request.release_date_to is not None:
+            predicates.append("catalog.release_date <= ?")
+            parameters.append(request.release_date_to)
 
         parameters.extend((request.limit, request.offset))
         sql = f"""

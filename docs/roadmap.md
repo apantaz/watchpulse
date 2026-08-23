@@ -136,6 +136,9 @@ query engine now applies the shared filter universe, controlled availability
 state/sorting, safe pagination, and provider aggregation for every upcoming
 discovery section. The public Top 10 endpoint now layers current-availability
 and popularity rules onto that engine and exposes all global filters in OpenAPI.
+New Releases independently applies the configurable content-release window to
+`release_date`, explicitly excluding future releases and avoiding any use of
+provider addition dates.
 
 Scope:
 

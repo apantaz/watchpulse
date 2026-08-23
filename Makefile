@@ -1,12 +1,33 @@
 PYTHON ?= python
 
-.PHONY: install install-hooks dbt-deps dbt-debug dbt-parse dbt-validate dbt-publish lint precommit pre-commit prepush pre-push syntax test coverage ci
+.PHONY: install install-hooks api-dev dbt-deps dbt-debug dbt-parse dbt-validate dbt-publish frontend-install frontend-dev frontend-lint frontend-test frontend-build frontend-ci lint precommit pre-commit prepush pre-push syntax test coverage ci
 
 install:
 	$(PYTHON) -m pip install -e ".[dev,warehouse]"
 
 install-hooks:
 	$(PYTHON) -m pre_commit install --hook-type pre-commit --hook-type pre-push --hook-type commit-msg
+
+api-dev:
+	uvicorn watchpulse.api:create_app --factory --reload
+
+frontend-install:
+	cd frontend && npm install
+
+frontend-dev:
+	cd frontend && npm run dev
+
+frontend-lint:
+	cd frontend && npm run lint
+	cd frontend && npm run typecheck
+
+frontend-test:
+	cd frontend && npm test
+
+frontend-build:
+	cd frontend && npm run build
+
+frontend-ci: frontend-lint frontend-test frontend-build
 
 dbt-deps:
 	cd warehouse && dbt deps

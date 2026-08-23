@@ -37,6 +37,7 @@ class Settings:
     lake_root: Path
     database_path: Path
     serving_database_path: Path
+    frontend_origins: tuple[str, ...]
     default_region: str
     supported_regions: tuple[str, ...]
     supported_providers: tuple[str, ...]
@@ -70,6 +71,12 @@ class Settings:
             database_path=Path(values.get("DATABASE_PATH", "data/warehouse.duckdb")),
             serving_database_path=Path(
                 values.get("WATCHPULSE_SERVING_DB_PATH", "data/warehouse_serving.duckdb")
+            ),
+            frontend_origins=_csv(
+                values.get(
+                    "WATCHPULSE_FRONTEND_ORIGINS",
+                    "http://127.0.0.1:5173,http://localhost:5173",
+                )
             ),
             default_region=default_region,
             supported_regions=supported_regions,

@@ -22,6 +22,19 @@ def _get(app: FastAPI, path: str) -> httpx.Response:
     return asyncio.run(request())
 
 
+def _options(app: FastAPI, path: str, origin: str) -> httpx.Response:
+    async def request() -> httpx.Response:
+        transport = httpx.ASGITransport(app=app)
+        headers = {
+            "Origin": origin,
+            "Access-Control-Request-Method": "GET",
+        }
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            return await client.options(path, headers=headers)
+
+    return asyncio.run(request())
+
+
 def _create_catalog(path: Path) -> None:
     with duckdb.connect(str(path)) as connection:
         connection.execute("create schema main_marts")
@@ -98,6 +111,15 @@ def test_settings_configure_the_serving_database_path() -> None:
     )
 
     assert settings.serving_database_path == Path("/tmp/watchpulse-api.duckdb")
+
+
+def test_local_frontend_origin_can_read_the_api(tmp_path: Path) -> None:
+    app = create_app(repository=CatalogRepository(tmp_path / "missing.duckdb"))
+
+    response = _options(app, "/health", "http://127.0.0.1:5173")
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:5173"
 
 
 def test_openapi_documents_the_foundation_endpoints(tmp_path: Path) -> None:

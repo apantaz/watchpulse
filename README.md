@@ -63,6 +63,7 @@ offline tests and warehouse builds do not require it.
 ## Requirements
 
 - Python 3.12 recommended (Python 3.10 or newer is required)
+- Node.js 22 for v0.5 frontend development (`npm` is included with Node.js)
 - A TMDB v3 API key
 - `pyenv` and `pyenv-virtualenv` are optional
 
@@ -148,6 +149,31 @@ Open `http://127.0.0.1:8000/docs` for the interactive OpenAPI interface. The
 API reads only `WATCHPULSE_SERVING_DB_PATH`; requests never call TMDB or the
 Streaming Availability API. See the [API guide](api/README.md) for routes,
 filters, section semantics, and examples.
+
+## Run the frontend
+
+The Python installation does not provide Node.js. If `npm` is not found, use
+the committed `frontend/.nvmrc` with Node Version Manager:
+
+```bash
+cd frontend
+nvm install
+nvm use
+cd ..
+```
+
+You can instead install Node.js 22 through its official operating-system
+installer. Keep the API running, then use a second terminal:
+
+```bash
+make frontend-install
+make frontend-dev
+```
+
+Open `http://127.0.0.1:5173`. The v0.5 application shell reads API health and
+catalog freshness from FastAPI, proving the complete local serving path. The
+browser never calls either upstream data provider. See the
+[frontend guide](frontend/README.md) for configuration and quality commands.
 
 ## Dependency management
 

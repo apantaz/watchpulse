@@ -123,32 +123,12 @@ conflated; their section-level query rules are delivered by v0.4. See the
 
 Goal: expose safe local discovery without upstream calls.
 
-Current status: **in progress (2026-08-23)**. FastAPI, an application factory,
-environment-backed serving-database configuration, read-only DuckDB repository,
-process health, catalog freshness, safe unavailable-catalog responses, generated
-OpenAPI documentation, and offline integration tests are implemented. The
-shared typed filter contract now validates and normalizes region, providers,
-content type, genres, runtime, release-year range, rating, and language before
-any discovery query is built. Read-only reference endpoints expose catalog
-regions, region-aware providers, scoped genres, content types, languages, and
-useful runtime/year/rating ranges without upstream calls. One parameterized
-query engine now applies the shared filter universe, controlled availability
-state/sorting, safe pagination, and provider aggregation for every upcoming
-discovery section. The public Top 10 endpoint now layers current-availability
-and popularity rules onto that engine and exposes all global filters in OpenAPI.
-New Releases independently applies the configurable content-release window to
-`release_date`, explicitly excluding future releases and avoiding any use of
-provider addition dates. Recently Added separately requires retained
-`available_since` lifecycle evidence within `RECENTLY_ADDED_DAYS`; missing
-addition timestamps are not guessed from catalog scans or content release dates.
-Upcoming now returns only non-current lifecycle rows whose `available_from` is
-strictly later than the response timestamp, ordered by the next known arrival.
-Leaving Soon has a complete current-title/expiration-window contract but returns
-an honest empty result while the first-release ingestion policy leaves
-`expiring` events disabled; expiration dates are never inferred.
-Scoped title details now return canonical local metadata and matching selected-
-provider current/upcoming availability by `tmdb_id` plus `content_type`, with no
-upstream fallback on a cache miss.
+Current status: **complete (2026-08-23)**. The read-only FastAPI backend exposes
+catalog references/freshness, a shared typed filter contract, parameterized
+DuckDB discovery, all five deterministic sections, and scoped title details.
+Cross-section HTTP tests prove filter consistency, region/provider isolation,
+safe boundaries, sanitized errors, complete OpenAPI documentation, and zero
+external requests during frontend-like browsing.
 
 Scope:
 
@@ -167,6 +147,10 @@ Exit criteria:
 - runtime and rating boundaries are correct;
 - frontend-like requests cause zero external API calls;
 - OpenAPI documentation reflects the contract.
+
+Exit criteria result: all passed. Leaving Soon intentionally remains empty
+until `expiring` lifecycle ingestion is enabled; no expiration is inferred. See
+the [v0.4 release notes](releases/v0.4.md).
 
 ## v0.5 — Frontend discovery
 

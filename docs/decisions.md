@@ -266,6 +266,28 @@ warehouse. The repository can later target a different serving database without
 changing endpoint response models. Deployment must provide a readable published
 database through `WATCHPULSE_SERVING_DB_PATH`.
 
+## ADR-017: Use one controlled discovery query engine
+
+- Status: accepted for v0.4
+- Date: 2026-08-23
+
+Decision: every discovery section uses one `DiscoveryFilters` contract and one
+query builder. Availability state and ordering are controlled enums mapped to
+fixed SQL expressions. All filter values, limits, and offsets are DuckDB bound
+parameters. A title available through multiple selected providers is returned
+once with the matching availability records aggregated beneath it.
+
+Why: duplicating SQL per section would allow filter semantics to drift and make
+region/provider leakage harder to detect. Returning one title per card avoids
+forcing the frontend to understand or deduplicate the warehouse's
+title/provider/monetization grain.
+
+Consequences: providers and selected genres use OR semantics, while different
+filter categories combine with AND semantics. Section-specific date predicates
+and ranking remain fixed business rules layered onto the same engine. Adding a
+new serving database requires replacing the repository implementation, not the
+HTTP or filter contracts.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

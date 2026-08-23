@@ -131,7 +131,10 @@ shared typed filter contract now validates and normalizes region, providers,
 content type, genres, runtime, release-year range, rating, and language before
 any discovery query is built. Read-only reference endpoints expose catalog
 regions, region-aware providers, scoped genres, content types, languages, and
-useful runtime/year/rating ranges without upstream calls.
+useful runtime/year/rating ranges without upstream calls. One parameterized
+query engine now applies the shared filter universe, controlled availability
+state/sorting, safe pagination, and provider aggregation for every upcoming
+discovery section.
 
 Scope:
 

@@ -64,3 +64,17 @@ Repeated parameters use standard query syntax, for example:
 Codes and keys are normalized, duplicate providers/genres are removed, unknown
 parameters are rejected, and invalid ranges return HTTP 422 before a database
 query can run.
+
+## Shared query engine
+
+Discovery sections use one controlled query builder over
+`main_marts.catalog_availability`. User values, pagination, provider lists, and
+genre lists are always bound parameters. Availability state and sorting use
+closed enums mapped to fixed SQL fragments. Results are grouped to one title
+with all matching selected-provider availability records attached.
+
+Multiple selected providers or genres match any value within that category;
+different filter categories must all match. The engine supports current,
+upcoming, or combined state plus controlled popularity, release, addition,
+arrival, and expiration ordering. Public section routes layer their fixed
+business rules onto this engine in the next increments.

@@ -141,6 +141,8 @@ New Releases independently applies the configurable content-release window to
 provider addition dates. Recently Added separately requires retained
 `available_since` lifecycle evidence within `RECENTLY_ADDED_DAYS`; missing
 addition timestamps are not guessed from catalog scans or content release dates.
+Upcoming now returns only non-current lifecycle rows whose `available_from` is
+strictly later than the response timestamp, ordered by the next known arrival.
 
 Scope:
 

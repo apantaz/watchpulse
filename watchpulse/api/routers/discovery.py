@@ -13,6 +13,7 @@ from watchpulse.api.models import (
     RankedCatalogItemResponse,
     RecentlyAddedResponse,
     TopTenResponse,
+    UpcomingResponse,
 )
 from watchpulse.api.query import AvailabilityState, DiscoveryRequest, DiscoverySort
 from watchpulse.api.repository import CatalogRepository
@@ -89,6 +90,26 @@ async def recently_added(request: Request, filters: DiscoveryFiltersQuery) -> Re
         filters=filters,
         as_of=as_of,
         window_days=window_days,
+        count=len(items),
+        items=tuple(CatalogItemResponse.model_validate(item) for item in items),
+    )
+
+
+@router.get("/upcoming", response_model=UpcomingResponse)
+async def upcoming(request: Request, filters: DiscoveryFiltersQuery) -> UpcomingResponse:
+    as_of = datetime.now(UTC)
+    query = DiscoveryRequest(
+        filters=filters,
+        availability=AvailabilityState.UPCOMING,
+        sort=DiscoverySort.AVAILABLE_FROM,
+        limit=20,
+        available_from_after=as_of,
+    )
+    items = _repository(request).discover(query)
+    return UpcomingResponse(
+        section="upcoming",
+        filters=filters,
+        as_of=as_of,
         count=len(items),
         items=tuple(CatalogItemResponse.model_validate(item) for item in items),
     )

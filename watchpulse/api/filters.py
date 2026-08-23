@@ -93,8 +93,44 @@ class DiscoveryFilters(CatalogScope):
         return self
 
 
+class TitleScope(BaseModel):
+    """Required region/provider scope for a title-details request."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    region: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
+    providers: tuple[str, ...] = Field(min_length=1, max_length=20)
+
+    @field_validator("region", mode="before")
+    @classmethod
+    def normalize_region(cls, value: object) -> object:
+        return value.strip().upper() if isinstance(value, str) else value
+
+    @field_validator("providers", mode="before")
+    @classmethod
+    def normalize_providers(cls, value: object) -> object:
+        if not isinstance(value, (list, tuple)):
+            return value
+        return tuple(
+            dict.fromkeys(item.strip().lower() if isinstance(item, str) else item for item in value)
+        )
+
+    @field_validator("providers")
+    @classmethod
+    def validate_provider_keys(cls, providers: tuple[str, ...]) -> tuple[str, ...]:
+        for provider in providers:
+            if re.fullmatch(r"[a-z0-9]+(?:_[a-z0-9]+)*", provider) is None:
+                raise ValueError(
+                    "provider keys must contain only letters, numbers, and underscores"
+                )
+        return providers
+
+
 DiscoveryFiltersQuery = Annotated[DiscoveryFilters, Query()]
 """FastAPI query binding reused by every discovery endpoint."""
 
 CatalogScopeQuery = Annotated[CatalogScope, Query()]
 """FastAPI query binding for region/provider-aware reference options."""
+
+TitleScopeQuery = Annotated[TitleScope, Query()]
+"""FastAPI query binding for scoped title details."""

@@ -38,12 +38,15 @@ class DiscoveryRequest:
     available_from_after: datetime | None = None
     expires_from: datetime | None = None
     expires_to: datetime | None = None
+    tmdb_id: int | None = None
 
     def __post_init__(self) -> None:
         if not 1 <= self.limit <= 100:
             raise ValueError("limit must be between 1 and 100")
         if self.offset < 0:
             raise ValueError("offset must be zero or greater")
+        if self.tmdb_id is not None and self.tmdb_id <= 0:
+            raise ValueError("tmdb_id must be positive")
         if (
             self.release_date_from is not None
             and self.release_date_to is not None
@@ -149,6 +152,9 @@ class DiscoveryQueryBuilder:
         if request.expires_to is not None:
             predicates.append("catalog.expires_on <= ?")
             parameters.append(request.expires_to)
+        if request.tmdb_id is not None:
+            predicates.append("catalog.tmdb_id = ?")
+            parameters.append(request.tmdb_id)
 
         parameters.extend((request.limit, request.offset))
         sql = f"""

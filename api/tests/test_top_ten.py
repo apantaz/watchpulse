@@ -298,3 +298,76 @@ def test_leaving_soon_filter_contract_is_visible_in_openapi() -> None:
     assert "region" in parameters
     assert "providers" in parameters
     assert "rating_min" in parameters
+
+
+def test_title_details_returns_scoped_metadata_and_availability() -> None:
+    repository = FakeRepository((_item(1, "Title", 20),))
+    app = create_app(repository=repository)
+
+    response = _get(
+        app,
+        "/api/v1/discovery/titles/movie/1",
+        [("region", "gr"), ("providers", "Netflix"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 200
+    assert repository.request is not None
+    assert repository.request.availability is AvailabilityState.ANY
+    assert repository.request.tmdb_id == 1
+    assert repository.request.limit == 1
+    assert repository.request.filters.region == "GR"
+    assert repository.request.filters.providers == ("netflix",)
+    assert repository.request.filters.content_type is not None
+    assert repository.request.filters.content_type.value == "movie"
+    payload = response.json()
+    assert payload["region"] == "GR"
+    assert payload["tmdb_id"] == 1
+    assert payload["title"] == "Title"
+    assert payload["availabilities"][0]["provider_key"] == "netflix"
+
+
+def test_title_details_returns_404_outside_selected_catalog() -> None:
+    app = create_app(repository=FakeRepository())
+
+    response = _get(
+        app,
+        "/api/v1/discovery/titles/tv/999",
+        [("region", "GR"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Title not found in the selected catalog"}
+
+
+def test_title_details_validates_path_and_scope() -> None:
+    app = create_app(repository=FakeRepository())
+
+    invalid_type = _get(
+        app,
+        "/api/v1/discovery/titles/series/1",
+        [("region", "GR"), ("providers", "netflix")],
+    )
+    invalid_id = _get(
+        app,
+        "/api/v1/discovery/titles/movie/0",
+        [("region", "GR"), ("providers", "netflix")],
+    )
+    injection = _get(
+        app,
+        "/api/v1/discovery/titles/movie/1",
+        [("region", "GR"), ("providers", "netflix') or true --")],
+    )
+
+    assert invalid_type.status_code == 422
+    assert invalid_id.status_code == 422
+    assert injection.status_code == 422
+
+
+def test_title_details_contract_is_visible_in_openapi() -> None:
+    app = create_app(repository=FakeRepository())
+
+    schema = _get(app, "/openapi.json").json()
+    operation = schema["paths"]["/api/v1/discovery/titles/{content_type}/{tmdb_id}"]["get"]
+    parameters = {parameter["name"] for parameter in operation["parameters"]}
+
+    assert parameters == {"content_type", "tmdb_id", "region", "providers"}

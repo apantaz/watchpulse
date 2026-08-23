@@ -156,3 +156,7 @@ class LeavingSoonResponse(BaseModel):
     window_days: int
     count: int
     items: tuple[CatalogItemResponse, ...]
+
+
+class TitleDetailsResponse(CatalogItemResponse):
+    region: str

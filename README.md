@@ -48,6 +48,7 @@ includes:
 - a read-only FastAPI backend with freshness and catalog reference endpoints;
 - a parameterized global filter engine with Top 10, New Releases, Recently
   Added, Upcoming, and Leaving Soon endpoints;
+- scoped local title details with aggregated provider availability;
 - unit tests that do not make live API calls.
 
 Version `v0.3` adds a tested dbt-duckdb warehouse, normalized data marts, a

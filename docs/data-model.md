@@ -259,6 +259,11 @@ serving mart's provider-level rows are grouped into one content result with a
 list of matching provider/monetization availability records, so the frontend
 does not deduplicate title cards.
 
+Title identity in the API is always the pair `tmdb_id` and `content_type`.
+Detail lookup additionally requires region and selected providers, and returns
+only matching local current/upcoming availability. Absence in that scoped
+catalog is a not-found result rather than a trigger for upstream enrichment.
+
 | Section | Required predicate | Date used |
 |---|---|---|
 | Top 10 | `is_available = true` | none |

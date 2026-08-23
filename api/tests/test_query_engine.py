@@ -335,12 +335,37 @@ def test_controlled_sort_and_pagination(tmp_path: Path) -> None:
     assert [item.tmdb_id for item in items] == [1]
 
 
+def test_internal_release_date_window_is_inclusive(tmp_path: Path) -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+    request = DiscoveryRequest(
+        filters,
+        sort=DiscoverySort.RELEASE_DATE,
+        release_date_from=date(2024, 1, 1),
+        release_date_to=date(2024, 1, 1),
+    )
+
+    items = _repository(tmp_path).discover(request)
+
+    assert [item.tmdb_id for item in items] == [1]
+
+
 @pytest.mark.parametrize(("limit", "offset"), [(0, 0), (101, 0), (20, -1)])
 def test_rejects_unsafe_pagination(limit: int, offset: int) -> None:
     filters = DiscoveryFilters(region="GR", providers=("netflix",))
 
     with pytest.raises(ValueError):
         DiscoveryRequest(filters, limit=limit, offset=offset)
+
+
+def test_rejects_reversed_internal_release_window() -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+
+    with pytest.raises(ValueError, match="release_date_from"):
+        DiscoveryRequest(
+            filters,
+            release_date_from=date(2025, 1, 1),
+            release_date_to=date(2024, 1, 1),
+        )
 
 
 def test_discovery_never_uses_the_network(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

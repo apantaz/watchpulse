@@ -121,3 +121,12 @@ class TopTenResponse(BaseModel):
     filters: DiscoveryFilters
     count: int
     items: tuple[RankedCatalogItemResponse, ...]
+
+
+class NewReleasesResponse(BaseModel):
+    section: Literal["new_releases"]
+    filters: DiscoveryFilters
+    as_of: date
+    window_days: int
+    count: int
+    items: tuple[CatalogItemResponse, ...]

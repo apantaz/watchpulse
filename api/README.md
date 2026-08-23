@@ -35,6 +35,7 @@ The default database is `data/warehouse_serving.duckdb`. Override it with
 - `GET /api/v1/catalog/genres?region=GR` — genres scoped by optional provider/type;
 - `GET /api/v1/catalog/filter-options?region=GR` — scoped types, languages, and ranges;
 - `GET /api/v1/discovery/top-10?region=GR&providers=netflix` — ranked current titles;
+- `GET /api/v1/discovery/new-releases?region=GR&providers=netflix` — recent releases;
 - `GET /docs` — interactive OpenAPI documentation.
 
 Catalog failures return HTTP 503 without exposing filesystem paths or DuckDB
@@ -90,4 +91,16 @@ matching availability across the selected providers.
 
 ```text
 GET /api/v1/discovery/top-10?region=GR&providers=netflix&content_type=movie
+```
+
+### New Releases
+
+New Releases means recently released content, not content recently added to a
+provider. The route selects currently available titles whose `release_date` is
+between the response's `as_of` date minus `NEW_RELEASE_DAYS` and `as_of`, then
+orders the results by release date. The response exposes the effective date and
+window so clients can describe the section honestly.
+
+```text
+GET /api/v1/discovery/new-releases?region=GR&providers=netflix
 ```

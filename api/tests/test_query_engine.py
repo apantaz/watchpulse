@@ -349,6 +349,20 @@ def test_internal_release_date_window_is_inclusive(tmp_path: Path) -> None:
     assert [item.tmdb_id for item in items] == [1]
 
 
+def test_internal_available_since_window_is_inclusive(tmp_path: Path) -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+    request = DiscoveryRequest(
+        filters,
+        sort=DiscoverySort.RECENTLY_ADDED,
+        available_since_from=datetime(2026, 8, 1),
+        available_since_to=datetime(2026, 8, 1),
+    )
+
+    items = _repository(tmp_path).discover(request)
+
+    assert [item.tmdb_id for item in items] == [1]
+
+
 @pytest.mark.parametrize(("limit", "offset"), [(0, 0), (101, 0), (20, -1)])
 def test_rejects_unsafe_pagination(limit: int, offset: int) -> None:
     filters = DiscoveryFilters(region="GR", providers=("netflix",))
@@ -365,6 +379,17 @@ def test_rejects_reversed_internal_release_window() -> None:
             filters,
             release_date_from=date(2025, 1, 1),
             release_date_to=date(2024, 1, 1),
+        )
+
+
+def test_rejects_reversed_internal_available_since_window() -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+
+    with pytest.raises(ValueError, match="available_since_from"):
+        DiscoveryRequest(
+            filters,
+            available_since_from=datetime(2026, 8, 2),
+            available_since_to=datetime(2026, 8, 1),
         )
 
 

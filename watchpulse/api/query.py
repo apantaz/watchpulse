@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Any
 
@@ -33,6 +33,8 @@ class DiscoveryRequest:
     offset: int = 0
     release_date_from: date | None = None
     release_date_to: date | None = None
+    available_since_from: datetime | None = None
+    available_since_to: datetime | None = None
 
     def __post_init__(self) -> None:
         if not 1 <= self.limit <= 100:
@@ -45,6 +47,12 @@ class DiscoveryRequest:
             and self.release_date_from > self.release_date_to
         ):
             raise ValueError("release_date_from must be before or equal to release_date_to")
+        if (
+            self.available_since_from is not None
+            and self.available_since_to is not None
+            and self.available_since_from > self.available_since_to
+        ):
+            raise ValueError("available_since_from must be before or equal to available_since_to")
 
 
 @dataclass(frozen=True)
@@ -117,6 +125,12 @@ class DiscoveryQueryBuilder:
         if request.release_date_to is not None:
             predicates.append("catalog.release_date <= ?")
             parameters.append(request.release_date_to)
+        if request.available_since_from is not None:
+            predicates.append("catalog.available_since >= ?")
+            parameters.append(request.available_since_from)
+        if request.available_since_to is not None:
+            predicates.append("catalog.available_since <= ?")
+            parameters.append(request.available_since_to)
 
         parameters.extend((request.limit, request.offset))
         sql = f"""

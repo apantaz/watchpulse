@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from fastapi import APIRouter, Request
 
@@ -11,6 +11,7 @@ from watchpulse.api.models import (
     CatalogItemResponse,
     NewReleasesResponse,
     RankedCatalogItemResponse,
+    RecentlyAddedResponse,
     TopTenResponse,
 )
 from watchpulse.api.query import AvailabilityState, DiscoveryRequest, DiscoverySort
@@ -62,6 +63,29 @@ async def new_releases(request: Request, filters: DiscoveryFiltersQuery) -> NewR
     items = _repository(request).discover(query)
     return NewReleasesResponse(
         section="new_releases",
+        filters=filters,
+        as_of=as_of,
+        window_days=window_days,
+        count=len(items),
+        items=tuple(CatalogItemResponse.model_validate(item) for item in items),
+    )
+
+
+@router.get("/recently-added", response_model=RecentlyAddedResponse)
+async def recently_added(request: Request, filters: DiscoveryFiltersQuery) -> RecentlyAddedResponse:
+    as_of = datetime.now(UTC)
+    window_days = request.app.state.settings.recently_added_days
+    query = DiscoveryRequest(
+        filters=filters,
+        availability=AvailabilityState.CURRENT,
+        sort=DiscoverySort.RECENTLY_ADDED,
+        limit=20,
+        available_since_from=as_of - timedelta(days=window_days),
+        available_since_to=as_of,
+    )
+    items = _repository(request).discover(query)
+    return RecentlyAddedResponse(
+        section="recently_added",
         filters=filters,
         as_of=as_of,
         window_days=window_days,

@@ -184,3 +184,45 @@ def test_new_releases_filter_contract_is_visible_in_openapi() -> None:
     assert "region" in parameters
     assert "providers" in parameters
     assert "release_year_from" in parameters
+
+
+def test_recently_added_uses_provider_addition_window_not_release_date() -> None:
+    repository = FakeRepository((_item(1, "Old title added now", 20),))
+    settings = Settings.from_env({"SUPPORTED_REGIONS": "GR", "RECENTLY_ADDED_DAYS": "14"})
+    app = create_app(settings=settings, repository=repository)
+
+    response = _get(
+        app,
+        "/api/v1/discovery/recently-added",
+        [("region", "GR"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 200
+    assert repository.request is not None
+    assert repository.request.availability is AvailabilityState.CURRENT
+    assert repository.request.sort is DiscoverySort.RECENTLY_ADDED
+    assert repository.request.limit == 20
+    assert repository.request.release_date_from is None
+    assert repository.request.release_date_to is None
+    assert repository.request.available_since_from is not None
+    assert repository.request.available_since_to is not None
+    assert (
+        repository.request.available_since_to - repository.request.available_since_from
+        == timedelta(days=14)
+    )
+    payload = response.json()
+    assert payload["section"] == "recently_added"
+    assert payload["window_days"] == 14
+    assert datetime.fromisoformat(payload["as_of"]) == repository.request.available_since_to
+
+
+def test_recently_added_filter_contract_is_visible_in_openapi() -> None:
+    app = create_app(repository=FakeRepository())
+
+    schema = _get(app, "/openapi.json").json()
+    operation = schema["paths"]["/api/v1/discovery/recently-added"]["get"]
+    parameters = {parameter["name"] for parameter in operation["parameters"]}
+
+    assert "region" in parameters
+    assert "providers" in parameters
+    assert "genre_ids" in parameters

@@ -46,7 +46,8 @@ includes:
 - catalog freshness metadata and failure-safe atomic DuckDB publication;
 - normalized content, genre, provider-source, availability, and event marts;
 - a read-only FastAPI backend with freshness and catalog reference endpoints;
-- a parameterized global filter engine with Top 10 and New Releases endpoints;
+- a parameterized global filter engine with Top 10, New Releases, and Recently
+  Added endpoints;
 - unit tests that do not make live API calls.
 
 Version `v0.3` adds a tested dbt-duckdb warehouse, normalized data marts, a

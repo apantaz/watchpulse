@@ -34,6 +34,7 @@ The default database is `data/warehouse_serving.duckdb`. Override it with
 - `GET /api/v1/catalog/providers?region=GR` — region-aware provider choices;
 - `GET /api/v1/catalog/genres?region=GR` — genres scoped by optional provider/type;
 - `GET /api/v1/catalog/filter-options?region=GR` — scoped types, languages, and ranges;
+- `GET /api/v1/discovery/top-10?region=GR&providers=netflix` — ranked current titles;
 - `GET /docs` — interactive OpenAPI documentation.
 
 Catalog failures return HTTP 503 without exposing filesystem paths or DuckDB
@@ -76,5 +77,17 @@ with all matching selected-provider availability records attached.
 Multiple selected providers or genres match any value within that category;
 different filter categories must all match. The engine supports current,
 upcoming, or combined state plus controlled popularity, release, addition,
-arrival, and expiration ordering. Public section routes layer their fixed
-business rules onto this engine in the next increments.
+arrival, and expiration ordering. Each public section route layers its fixed
+business rules onto this engine; Top 10 is the first implemented section.
+
+### Top 10
+
+Top 10 is WatchPulse's ranking, not an upstream provider's official chart. The
+initial route selects only currently available titles, applies the complete
+global filter contract, sorts by TMDB popularity with deterministic tie-breaks,
+and returns at most ten results. Each result has an explicit rank and aggregates
+matching availability across the selected providers.
+
+```text
+GET /api/v1/discovery/top-10?region=GR&providers=netflix&content_type=movie
+```

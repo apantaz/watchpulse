@@ -26,7 +26,7 @@ Documentation is split by responsibility:
 
 ## Project status
 
-Version `v0.3` is released and `v0.4` is next. The repository currently
+Version `v0.3` is released and `v0.4` is in progress. The repository currently
 includes:
 
 - configurable TMDB discovery by region and provider;
@@ -45,6 +45,8 @@ includes:
   TMDB-preferred metadata;
 - catalog freshness metadata and failure-safe atomic DuckDB publication;
 - normalized content, genre, provider-source, availability, and event marts;
+- a read-only FastAPI backend with freshness and catalog reference endpoints;
+- a parameterized global filter engine and ranked Top 10 discovery endpoint;
 - unit tests that do not make live API calls.
 
 Version `v0.3` adds a tested dbt-duckdb warehouse, normalized data marts, a

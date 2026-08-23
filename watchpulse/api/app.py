@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from watchpulse.api.models import CatalogFreshnessResponse, HealthResponse
 from watchpulse.api.repository import CatalogRepository, CatalogUnavailableError
 from watchpulse.api.routers.catalog import router as catalog_router
+from watchpulse.api.routers.discovery import router as discovery_router
 from watchpulse.config import Settings
 
 
@@ -47,5 +48,6 @@ def create_app(
         return CatalogFreshnessResponse.model_validate(freshness)
 
     app.include_router(catalog_router)
+    app.include_router(discovery_router)
 
     return app

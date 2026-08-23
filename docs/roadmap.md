@@ -129,7 +129,9 @@ process health, catalog freshness, safe unavailable-catalog responses, generated
 OpenAPI documentation, and offline integration tests are implemented. The
 shared typed filter contract now validates and normalizes region, providers,
 content type, genres, runtime, release-year range, rating, and language before
-any discovery query is built.
+any discovery query is built. Read-only reference endpoints expose catalog
+regions, region-aware providers, scoped genres, content types, languages, and
+useful runtime/year/rating ranges without upstream calls.
 
 Scope:
 

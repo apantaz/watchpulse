@@ -17,20 +17,14 @@ class ContentType(str, Enum):
     TV = "tv"
 
 
-class DiscoveryFilters(BaseModel):
-    """The global filter universe shared by all discovery sections."""
+class CatalogScope(BaseModel):
+    """Catalog scope used while a user is still choosing filter options."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     region: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
-    providers: tuple[str, ...] = Field(min_length=1, max_length=20)
+    providers: tuple[str, ...] = Field(default=(), max_length=20)
     content_type: ContentType | None = None
-    genre_ids: tuple[int, ...] = Field(default=(), max_length=20)
-    runtime_max: int | None = Field(default=None, ge=1, le=1440)
-    release_year_from: int | None = Field(default=None, ge=1870, le=2200)
-    release_year_to: int | None = Field(default=None, ge=1870, le=2200)
-    rating_min: float | None = Field(default=None, ge=0, le=10)
-    language: str | None = Field(default=None, pattern=r"^[a-z]{2,3}$")
 
     @field_validator("region", mode="before")
     @classmethod
@@ -56,6 +50,18 @@ class DiscoveryFilters(BaseModel):
                     "provider keys must contain only letters, numbers, and underscores"
                 )
         return providers
+
+
+class DiscoveryFilters(CatalogScope):
+    """The global filter universe shared by all discovery sections."""
+
+    providers: tuple[str, ...] = Field(min_length=1, max_length=20)
+    genre_ids: tuple[int, ...] = Field(default=(), max_length=20)
+    runtime_max: int | None = Field(default=None, ge=1, le=1440)
+    release_year_from: int | None = Field(default=None, ge=1870, le=2200)
+    release_year_to: int | None = Field(default=None, ge=1870, le=2200)
+    rating_min: float | None = Field(default=None, ge=0, le=10)
+    language: str | None = Field(default=None, pattern=r"^[a-z]{2,3}$")
 
     @field_validator("genre_ids", mode="before")
     @classmethod
@@ -89,3 +95,6 @@ class DiscoveryFilters(BaseModel):
 
 DiscoveryFiltersQuery = Annotated[DiscoveryFilters, Query()]
 """FastAPI query binding reused by every discovery endpoint."""
+
+CatalogScopeQuery = Annotated[CatalogScope, Query()]
+"""FastAPI query binding for region/provider-aware reference options."""

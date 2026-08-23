@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from watchpulse.api.models import CatalogFreshnessResponse, HealthResponse
 from watchpulse.api.repository import CatalogRepository, CatalogUnavailableError
+from watchpulse.api.routers.catalog import router as catalog_router
 from watchpulse.config import Settings
 
 
@@ -25,6 +27,12 @@ def create_app(
     )
     app.state.catalog_repository = catalog_repository
 
+    @app.exception_handler(CatalogUnavailableError)
+    async def catalog_unavailable(
+        _request: Request, error: CatalogUnavailableError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=503, content={"detail": str(error)})
+
     @app.get("/health", response_model=HealthResponse, tags=["operations"])
     async def health() -> HealthResponse:
         return HealthResponse(status="ok")
@@ -35,13 +43,9 @@ def create_app(
         tags=["catalog"],
     )
     async def catalog_freshness(request: Request) -> CatalogFreshnessResponse:
-        try:
-            freshness = request.app.state.catalog_repository.get_freshness()
-        except CatalogUnavailableError as error:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=str(error),
-            ) from error
+        freshness = request.app.state.catalog_repository.get_freshness()
         return CatalogFreshnessResponse.model_validate(freshness)
+
+    app.include_router(catalog_router)
 
     return app

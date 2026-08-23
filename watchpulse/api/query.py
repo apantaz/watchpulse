@@ -36,6 +36,8 @@ class DiscoveryRequest:
     available_since_from: datetime | None = None
     available_since_to: datetime | None = None
     available_from_after: datetime | None = None
+    expires_from: datetime | None = None
+    expires_to: datetime | None = None
 
     def __post_init__(self) -> None:
         if not 1 <= self.limit <= 100:
@@ -54,6 +56,12 @@ class DiscoveryRequest:
             and self.available_since_from > self.available_since_to
         ):
             raise ValueError("available_since_from must be before or equal to available_since_to")
+        if (
+            self.expires_from is not None
+            and self.expires_to is not None
+            and self.expires_from > self.expires_to
+        ):
+            raise ValueError("expires_from must be before or equal to expires_to")
 
 
 @dataclass(frozen=True)
@@ -135,6 +143,12 @@ class DiscoveryQueryBuilder:
         if request.available_from_after is not None:
             predicates.append("catalog.available_from > ?")
             parameters.append(request.available_from_after)
+        if request.expires_from is not None:
+            predicates.append("catalog.expires_on >= ?")
+            parameters.append(request.expires_from)
+        if request.expires_to is not None:
+            predicates.append("catalog.expires_on <= ?")
+            parameters.append(request.expires_to)
 
         parameters.extend((request.limit, request.offset))
         sql = f"""

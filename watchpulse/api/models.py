@@ -147,3 +147,12 @@ class UpcomingResponse(BaseModel):
     as_of: datetime
     count: int
     items: tuple[CatalogItemResponse, ...]
+
+
+class LeavingSoonResponse(BaseModel):
+    section: Literal["leaving_soon"]
+    filters: DiscoveryFilters
+    as_of: datetime
+    window_days: int
+    count: int
+    items: tuple[CatalogItemResponse, ...]

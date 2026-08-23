@@ -143,6 +143,9 @@ provider addition dates. Recently Added separately requires retained
 addition timestamps are not guessed from catalog scans or content release dates.
 Upcoming now returns only non-current lifecycle rows whose `available_from` is
 strictly later than the response timestamp, ordered by the next known arrival.
+Leaving Soon has a complete current-title/expiration-window contract but returns
+an honest empty result while the first-release ingestion policy leaves
+`expiring` events disabled; expiration dates are never inferred.
 
 Scope:
 

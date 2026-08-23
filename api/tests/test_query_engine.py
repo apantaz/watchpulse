@@ -132,7 +132,7 @@ def _create_catalog(path: Path) -> None:
                 "subscription",
                 datetime(2026, 7, 1),
                 None,
-                None,
+                datetime(2026, 8, 30),
                 True,
                 False,
                 "/2.jpg",
@@ -388,6 +388,31 @@ def test_upcoming_requires_a_strictly_future_arrival(tmp_path: Path) -> None:
     assert at_arrival == ()
 
 
+def test_leaving_soon_requires_expiration_inside_inclusive_window(tmp_path: Path) -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+    repository = _repository(tmp_path)
+
+    inside = repository.discover(
+        DiscoveryRequest(
+            filters,
+            sort=DiscoverySort.EXPIRATION,
+            expires_from=datetime(2026, 8, 23),
+            expires_to=datetime(2026, 8, 30),
+        )
+    )
+    before_window = repository.discover(
+        DiscoveryRequest(
+            filters,
+            sort=DiscoverySort.EXPIRATION,
+            expires_from=datetime(2026, 8, 31),
+            expires_to=datetime(2026, 9, 30),
+        )
+    )
+
+    assert [item.tmdb_id for item in inside] == [2]
+    assert before_window == ()
+
+
 @pytest.mark.parametrize(("limit", "offset"), [(0, 0), (101, 0), (20, -1)])
 def test_rejects_unsafe_pagination(limit: int, offset: int) -> None:
     filters = DiscoveryFilters(region="GR", providers=("netflix",))
@@ -415,6 +440,17 @@ def test_rejects_reversed_internal_available_since_window() -> None:
             filters,
             available_since_from=datetime(2026, 8, 2),
             available_since_to=datetime(2026, 8, 1),
+        )
+
+
+def test_rejects_reversed_internal_expiration_window() -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+
+    with pytest.raises(ValueError, match="expires_from"):
+        DiscoveryRequest(
+            filters,
+            expires_from=datetime(2026, 9, 1),
+            expires_to=datetime(2026, 8, 1),
         )
 
 

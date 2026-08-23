@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getProviders, getRegions, type ProviderOption } from "../api/catalog";
 import { loadPreferences, savePreferences } from "../preferences";
+import type { CatalogScope } from "../discovery";
 
 type SetupState =
   | { kind: "loading-regions" }
@@ -10,7 +11,11 @@ type SetupState =
 
 const regionNames = new Intl.DisplayNames([navigator.language], { type: "region" });
 
-export function DiscoverySetup() {
+type DiscoverySetupProps = {
+  onScopeChange: (scope: CatalogScope | null) => void;
+};
+
+export function DiscoverySetup({ onScopeChange }: DiscoverySetupProps) {
   const saved = loadPreferences();
   const [regions, setRegions] = useState<string[]>([]);
   const [region, setRegion] = useState(saved.region ?? "");
@@ -55,8 +60,13 @@ export function DiscoverySetup() {
   }, [region]);
 
   useEffect(() => {
-    if (state.kind === "ready") savePreferences({ region, providers: selectedProviders });
-  }, [region, selectedProviders, state.kind]);
+    if (state.kind === "ready") {
+      savePreferences({ region, providers: selectedProviders });
+      onScopeChange({ region, providers: selectedProviders });
+    } else {
+      onScopeChange(null);
+    }
+  }, [region, selectedProviders, state.kind, onScopeChange]);
 
   const toggleProvider = (key: string) => {
     setSelectedProviders((current) =>

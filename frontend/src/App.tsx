@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { type CatalogStatus, getCatalogStatus } from "./api/catalog";
 import { DiscoverySetup } from "./components/DiscoverySetup";
+import { GlobalFilters } from "./components/GlobalFilters";
+import { type CatalogScope, type GlobalFilters as FilterValue } from "./discovery";
+import { loadPreferences } from "./preferences";
 import "./styles.css";
 
 type LoadState =
@@ -15,6 +18,20 @@ const formatRefresh = (value: string) =>
 
 export default function App() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
+  const [scope, setScope] = useState<CatalogScope | null>(null);
+  const [filters, setFilters] = useState<FilterValue>(() => {
+    const saved = loadPreferences();
+    return {
+      contentType: saved.contentType,
+      genreIds: saved.genreIds,
+      runtimeMax: saved.runtimeMax,
+      releaseYearFrom: saved.releaseYearFrom,
+      releaseYearTo: saved.releaseYearTo,
+      ratingMin: saved.ratingMin,
+      language: saved.language,
+    };
+  });
+  const handleScopeChange = useCallback((nextScope: CatalogScope | null) => setScope(nextScope), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -59,8 +76,14 @@ export default function App() {
           </div>
         )}
       </section>
-      {state.kind === "ready" && <DiscoverySetup />}
-      <p className="coming-next">Global filters and discovery rails arrive in the next increment.</p>
+      {state.kind === "ready" && <DiscoverySetup onScopeChange={handleScopeChange} />}
+      {scope && scope.providers.length > 0 && (
+        <GlobalFilters scope={scope} value={filters} onChange={setFilters} />
+      )}
+      {scope && scope.providers.length === 0 && (
+        <p className="selection-prompt">Select at least one streaming service to refine your catalog.</p>
+      )}
+      <p className="coming-next">Discovery rails arrive in the next increment.</p>
     </main>
   );
 }

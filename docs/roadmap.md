@@ -146,6 +146,9 @@ strictly later than the response timestamp, ordered by the next known arrival.
 Leaving Soon has a complete current-title/expiration-window contract but returns
 an honest empty result while the first-release ingestion policy leaves
 `expiring` events disabled; expiration dates are never inferred.
+Scoped title details now return canonical local metadata and matching selected-
+provider current/upcoming availability by `tmdb_id` plus `content_type`, with no
+upstream fallback on a cache miss.
 
 Scope:
 

@@ -413,6 +413,29 @@ def test_leaving_soon_requires_expiration_inside_inclusive_window(tmp_path: Path
     assert before_window == ()
 
 
+def test_title_identity_is_bound_and_scoped(tmp_path: Path) -> None:
+    filters = DiscoveryFilters(
+        region="GR",
+        providers=("netflix", "disney_plus"),
+        content_type="movie",
+    )
+
+    items = _repository(tmp_path).discover(
+        DiscoveryRequest(
+            filters,
+            availability=AvailabilityState.ANY,
+            limit=1,
+            tmdb_id=1,
+        )
+    )
+
+    assert [item.tmdb_id for item in items] == [1]
+    assert {availability.provider_key for availability in items[0].availabilities} == {
+        "netflix",
+        "disney_plus",
+    }
+
+
 @pytest.mark.parametrize(("limit", "offset"), [(0, 0), (101, 0), (20, -1)])
 def test_rejects_unsafe_pagination(limit: int, offset: int) -> None:
     filters = DiscoveryFilters(region="GR", providers=("netflix",))
@@ -452,6 +475,13 @@ def test_rejects_reversed_internal_expiration_window() -> None:
             expires_from=datetime(2026, 9, 1),
             expires_to=datetime(2026, 8, 1),
         )
+
+
+def test_rejects_invalid_internal_title_identity() -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+
+    with pytest.raises(ValueError, match="tmdb_id"):
+        DiscoveryRequest(filters, tmdb_id=0)
 
 
 def test_discovery_never_uses_the_network(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -39,6 +39,7 @@ The default database is `data/warehouse_serving.duckdb`. Override it with
 - `GET /api/v1/discovery/recently-added?region=GR&providers=netflix` — provider additions;
 - `GET /api/v1/discovery/upcoming?region=GR&providers=netflix` — future arrivals;
 - `GET /api/v1/discovery/leaving-soon?region=GR&providers=netflix` — known expirations;
+- `GET /api/v1/discovery/titles/movie/634649?region=GR&providers=netflix` — title details;
 - `GET /docs` — interactive OpenAPI documentation.
 
 Catalog failures return HTTP 503 without exposing filesystem paths or DuckDB
@@ -145,4 +146,16 @@ begin returning results when `expiring` ingestion is deliberately enabled.
 
 ```text
 GET /api/v1/discovery/leaving-soon?region=GR&providers=netflix
+```
+
+### Title details
+
+Title details use the canonical TMDB ID plus the explicit `movie` or `tv`
+content type, region, and at least one selected provider. The response contains
+normalized local metadata and aggregates matching current or upcoming
+availability across those providers. A title outside that scoped catalog
+returns HTTP 404; the lookup never falls back to a live upstream request.
+
+```text
+GET /api/v1/discovery/titles/movie/634649?region=GR&providers=netflix
 ```

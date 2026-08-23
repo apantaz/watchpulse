@@ -4,15 +4,21 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Path, Request
 
-from watchpulse.api.filters import DiscoveryFiltersQuery
+from watchpulse.api.filters import (
+    ContentType,
+    DiscoveryFilters,
+    DiscoveryFiltersQuery,
+    TitleScopeQuery,
+)
 from watchpulse.api.models import (
     CatalogItemResponse,
     LeavingSoonResponse,
     NewReleasesResponse,
     RankedCatalogItemResponse,
     RecentlyAddedResponse,
+    TitleDetailsResponse,
     TopTenResponse,
     UpcomingResponse,
 )
@@ -137,3 +143,31 @@ async def leaving_soon(request: Request, filters: DiscoveryFiltersQuery) -> Leav
         count=len(items),
         items=tuple(CatalogItemResponse.model_validate(item) for item in items),
     )
+
+
+@router.get(
+    "/titles/{content_type}/{tmdb_id}",
+    response_model=TitleDetailsResponse,
+)
+async def title_details(
+    request: Request,
+    scope: TitleScopeQuery,
+    content_type: ContentType,
+    tmdb_id: int = Path(ge=1),
+) -> TitleDetailsResponse:
+    filters = DiscoveryFilters(
+        region=scope.region,
+        providers=scope.providers,
+        content_type=content_type,
+    )
+    query = DiscoveryRequest(
+        filters=filters,
+        availability=AvailabilityState.ANY,
+        limit=1,
+        tmdb_id=tmdb_id,
+    )
+    items = _repository(request).discover(query)
+    if not items:
+        raise HTTPException(status_code=404, detail="Title not found in the selected catalog")
+    item = CatalogItemResponse.model_validate(items[0])
+    return TitleDetailsResponse(region=scope.region, **item.model_dump())

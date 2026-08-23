@@ -253,6 +253,12 @@ IDs, maximum runtime, inclusive release-year bounds, minimum TMDB rating, and
 original language are optional. Validation and normalization happen before the
 repository receives the values; unknown query fields are rejected.
 
+The query engine combines different filter categories with `AND`. Multiple
+providers and multiple genre IDs each use `OR` within their own category. The
+serving mart's provider-level rows are grouped into one content result with a
+list of matching provider/monetization availability records, so the frontend
+does not deduplicate title cards.
+
 | Section | Required predicate | Date used |
 |---|---|---|
 | Top 10 | `is_available = true` | none |

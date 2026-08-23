@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 import duckdb
 
 from watchpulse.api.filters import CatalogScope
+from watchpulse.api.query import DiscoveryQueryBuilder, DiscoveryRequest
 
 
 class CatalogUnavailableError(RuntimeError):
@@ -49,6 +51,41 @@ class FilterOptions:
     release_year_max: int | None
     rating_min: float | None
     rating_max: float | None
+
+
+@dataclass(frozen=True)
+class CatalogAvailability:
+    provider_key: str
+    provider_name: str
+    monetization_type: str
+    available_since: datetime | None
+    available_from: datetime | None
+    expires_on: datetime | None
+    is_available: bool
+    is_upcoming: bool
+    source: str
+
+
+@dataclass(frozen=True)
+class CatalogItem:
+    tmdb_id: int
+    content_type: str
+    title: str
+    original_title: str | None
+    overview: str | None
+    release_date: date | None
+    release_year: int | None
+    runtime_minutes: int | None
+    original_language: str | None
+    genre_ids: tuple[int, ...]
+    tmdb_rating: float | None
+    vote_count: int | None
+    popularity_score: float | None
+    poster_path: str | None
+    backdrop_path: str | None
+    metadata_source: str
+    last_updated_at: datetime
+    availabilities: tuple[CatalogAvailability, ...]
 
 
 class CatalogRepository:
@@ -157,6 +194,36 @@ class CatalogRepository:
             release_year_max=ranges[3],
             rating_min=ranges[4],
             rating_max=ranges[5],
+        )
+
+    def discover(self, request: DiscoveryRequest) -> tuple[CatalogItem, ...]:
+        query = DiscoveryQueryBuilder().build(request)
+        rows = self._fetchall(query.sql, list(query.parameters))
+        return tuple(self._catalog_item(row) for row in rows)
+
+    @staticmethod
+    def _catalog_item(row: tuple[Any, ...]) -> CatalogItem:
+        raw_genres = json.loads(row[9]) if row[9] is not None else []
+        availabilities = tuple(CatalogAvailability(**availability) for availability in row[17])
+        return CatalogItem(
+            tmdb_id=row[0],
+            content_type=row[1],
+            title=row[2],
+            original_title=row[3],
+            overview=row[4],
+            release_date=row[5],
+            release_year=row[6],
+            runtime_minutes=row[7],
+            original_language=row[8],
+            genre_ids=tuple(int(genre_id) for genre_id in raw_genres),
+            tmdb_rating=row[10],
+            vote_count=row[11],
+            popularity_score=row[12],
+            poster_path=row[13],
+            backdrop_path=row[14],
+            metadata_source=row[15],
+            last_updated_at=row[16],
+            availabilities=availabilities,
         )
 
     @staticmethod

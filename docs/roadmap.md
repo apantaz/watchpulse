@@ -159,7 +159,10 @@ Goal: deliver the complete deterministic user experience locally.
 Current status: **in progress (2026-08-23)**. React, TypeScript, and Vite are
 selected in ADR-018. The first increment establishes the responsive application
 shell, typed local API client, catalog readiness state, explicit development
-CORS policy, frontend tests, and CI build validation.
+CORS policy, frontend tests, and CI build validation. The second increment adds
+API-driven region and region-aware provider selection, validates restored guest
+choices against the current catalog, and persists valid preferences locally in
+the browser.
 
 Scope:
 

@@ -288,11 +288,36 @@ and ranking remain fixed business rules layered onto the same engine. Adding a
 new serving database requires replacing the repository implementation, not the
 HTTP or filter contracts.
 
+## ADR-018: React and TypeScript for the discovery frontend
+
+- Status: accepted for v0.5
+- Date: 2026-08-23
+
+Decision: build the guest discovery interface as a React 19 single-page
+application using TypeScript and Vite. The frontend owns presentation and
+browser-local preferences, while all availability, filtering, and ranking stay
+behind the FastAPI contract. Vitest and Testing Library cover user-visible
+behavior. Production dependencies are kept deliberately small.
+
+Why: the interface has shared filter state, five reactive discovery rails, and
+title details, which benefit from component composition and typed API
+contracts. Vite provides a fast development/build loop without introducing a
+full-stack JavaScript server that would duplicate FastAPI responsibilities.
+
+Consequences:
+
+- Node.js 22 is the supported development and CI runtime;
+- the browser calls only the configured WatchPulse API base URL;
+- FastAPI permits an explicit environment-configured list of frontend origins;
+- SEO pre-rendering remains possible later, but is not required for the local
+  deterministic MVP;
+- authentication, server-side rendering, and a UI component framework are not
+  introduced by this decision.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:
 
-- frontend framework for the production-looking MVP;
 - hosting platform and atomic DuckDB artifact delivery;
 - initial public regions and providers beyond the configurable Greece default;
 - measured threshold for moving serving from DuckDB to Postgres.

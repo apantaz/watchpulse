@@ -156,6 +156,11 @@ the [v0.4 release notes](releases/v0.4.md).
 
 Goal: deliver the complete deterministic user experience locally.
 
+Current status: **in progress (2026-08-23)**. React, TypeScript, and Vite are
+selected in ADR-018. The first increment establishes the responsive application
+shell, typed local API client, catalog readiness state, explicit development
+CORS policy, frontend tests, and CI build validation.
+
 Scope:
 
 - choose and document the frontend framework;

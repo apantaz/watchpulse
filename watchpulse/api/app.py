@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from watchpulse.api.models import CatalogFreshnessResponse, HealthResponse
@@ -28,6 +29,12 @@ def create_app(
     )
     app.state.catalog_repository = catalog_repository
     app.state.settings = resolved_settings
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(resolved_settings.frontend_origins),
+        allow_methods=["GET"],
+        allow_headers=["Accept", "Content-Type"],
+    )
 
     @app.exception_handler(CatalogUnavailableError)
     async def catalog_unavailable(

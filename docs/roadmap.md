@@ -138,7 +138,9 @@ discovery section. The public Top 10 endpoint now layers current-availability
 and popularity rules onto that engine and exposes all global filters in OpenAPI.
 New Releases independently applies the configurable content-release window to
 `release_date`, explicitly excluding future releases and avoiding any use of
-provider addition dates.
+provider addition dates. Recently Added separately requires retained
+`available_since` lifecycle evidence within `RECENTLY_ADDED_DAYS`; missing
+addition timestamps are not guessed from catalog scans or content release dates.
 
 Scope:
 

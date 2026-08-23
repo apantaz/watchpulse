@@ -226,3 +226,37 @@ def test_recently_added_filter_contract_is_visible_in_openapi() -> None:
     assert "region" in parameters
     assert "providers" in parameters
     assert "genre_ids" in parameters
+
+
+def test_upcoming_uses_future_non_current_arrivals() -> None:
+    repository = FakeRepository()
+    app = create_app(repository=repository)
+
+    response = _get(
+        app,
+        "/api/v1/discovery/upcoming",
+        [("region", "GR"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 200
+    assert repository.request is not None
+    assert repository.request.availability is AvailabilityState.UPCOMING
+    assert repository.request.sort is DiscoverySort.AVAILABLE_FROM
+    assert repository.request.limit == 20
+    assert repository.request.available_from_after is not None
+    payload = response.json()
+    assert payload["section"] == "upcoming"
+    assert datetime.fromisoformat(payload["as_of"]) == repository.request.available_from_after
+    assert payload["items"] == []
+
+
+def test_upcoming_filter_contract_is_visible_in_openapi() -> None:
+    app = create_app(repository=FakeRepository())
+
+    schema = _get(app, "/openapi.json").json()
+    operation = schema["paths"]["/api/v1/discovery/upcoming"]["get"]
+    parameters = {parameter["name"] for parameter in operation["parameters"]}
+
+    assert "region" in parameters
+    assert "providers" in parameters
+    assert "content_type" in parameters

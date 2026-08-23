@@ -363,6 +363,31 @@ def test_internal_available_since_window_is_inclusive(tmp_path: Path) -> None:
     assert [item.tmdb_id for item in items] == [1]
 
 
+def test_upcoming_requires_a_strictly_future_arrival(tmp_path: Path) -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+    repository = _repository(tmp_path)
+
+    before_arrival = repository.discover(
+        DiscoveryRequest(
+            filters,
+            availability=AvailabilityState.UPCOMING,
+            sort=DiscoverySort.AVAILABLE_FROM,
+            available_from_after=datetime(2026, 8, 31, 23, 59),
+        )
+    )
+    at_arrival = repository.discover(
+        DiscoveryRequest(
+            filters,
+            availability=AvailabilityState.UPCOMING,
+            sort=DiscoverySort.AVAILABLE_FROM,
+            available_from_after=datetime(2026, 9, 1),
+        )
+    )
+
+    assert [item.tmdb_id for item in before_arrival] == [4]
+    assert at_arrival == ()
+
+
 @pytest.mark.parametrize(("limit", "offset"), [(0, 0), (101, 0), (20, -1)])
 def test_rejects_unsafe_pagination(limit: int, offset: int) -> None:
     filters = DiscoveryFilters(region="GR", providers=("netflix",))

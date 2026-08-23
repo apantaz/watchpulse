@@ -37,6 +37,7 @@ The default database is `data/warehouse_serving.duckdb`. Override it with
 - `GET /api/v1/discovery/top-10?region=GR&providers=netflix` — ranked current titles;
 - `GET /api/v1/discovery/new-releases?region=GR&providers=netflix` — recent releases;
 - `GET /api/v1/discovery/recently-added?region=GR&providers=netflix` — provider additions;
+- `GET /api/v1/discovery/upcoming?region=GR&providers=netflix` — future arrivals;
 - `GET /docs` — interactive OpenAPI documentation.
 
 Catalog failures return HTTP 503 without exposing filesystem paths or DuckDB
@@ -117,4 +118,15 @@ the effective timestamp/window in its response. It never substitutes
 
 ```text
 GET /api/v1/discovery/recently-added?region=GR&providers=netflix
+```
+
+### Upcoming
+
+Upcoming selects only rows marked upcoming and not currently available, with a
+non-null `available_from` strictly later than the response's `as_of` timestamp.
+Results are ordered by earliest arrival. The route does not impose an arbitrary
+future window; its bounded response returns the next 20 matching titles.
+
+```text
+GET /api/v1/discovery/upcoming?region=GR&providers=netflix
 ```

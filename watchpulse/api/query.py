@@ -35,6 +35,7 @@ class DiscoveryRequest:
     release_date_to: date | None = None
     available_since_from: datetime | None = None
     available_since_to: datetime | None = None
+    available_from_after: datetime | None = None
 
     def __post_init__(self) -> None:
         if not 1 <= self.limit <= 100:
@@ -65,8 +66,8 @@ class DiscoveryQueryBuilder:
     """Build discovery SQL using only fixed fragments and bound values."""
 
     _availability_predicates = {
-        AvailabilityState.CURRENT: "catalog.is_available = true",
-        AvailabilityState.UPCOMING: "catalog.is_upcoming = true",
+        AvailabilityState.CURRENT: ("catalog.is_available = true and catalog.is_upcoming = false"),
+        AvailabilityState.UPCOMING: ("catalog.is_upcoming = true and catalog.is_available = false"),
         AvailabilityState.ANY: "true",
     }
     _sort_expressions = {
@@ -131,6 +132,9 @@ class DiscoveryQueryBuilder:
         if request.available_since_to is not None:
             predicates.append("catalog.available_since <= ?")
             parameters.append(request.available_since_to)
+        if request.available_from_after is not None:
+            predicates.append("catalog.available_from > ?")
+            parameters.append(request.available_from_after)
 
         parameters.extend((request.limit, request.offset))
         sql = f"""

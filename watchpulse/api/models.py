@@ -139,3 +139,11 @@ class RecentlyAddedResponse(BaseModel):
     window_days: int
     count: int
     items: tuple[CatalogItemResponse, ...]
+
+
+class UpcomingResponse(BaseModel):
+    section: Literal["upcoming"]
+    filters: DiscoveryFilters
+    as_of: datetime
+    count: int
+    items: tuple[CatalogItemResponse, ...]

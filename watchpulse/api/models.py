@@ -24,3 +24,49 @@ class CatalogFreshnessResponse(BaseModel):
     catalog_row_count: int
     current_row_count: int
     upcoming_row_count: int
+
+
+class RegionOption(BaseModel):
+    code: str
+
+
+class RegionsResponse(BaseModel):
+    regions: tuple[RegionOption, ...]
+
+
+class ProviderOption(BaseModel):
+    key: str
+    name: str
+
+
+class ProvidersResponse(BaseModel):
+    region: str
+    providers: tuple[ProviderOption, ...]
+
+
+class GenreOption(BaseModel):
+    content_type: str
+    id: int
+    name: str
+
+
+class GenresResponse(BaseModel):
+    genres: tuple[GenreOption, ...]
+
+
+class IntegerRange(BaseModel):
+    minimum: int | None
+    maximum: int | None
+
+
+class NumberRange(BaseModel):
+    minimum: float | None
+    maximum: float | None
+
+
+class FilterOptionsResponse(BaseModel):
+    content_types: tuple[str, ...]
+    languages: tuple[str, ...]
+    runtime_minutes: IntegerRange
+    release_year: IntegerRange
+    rating: NumberRange

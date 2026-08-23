@@ -5,8 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import duckdb
+
+from watchpulse.api.filters import CatalogScope
 
 
 class CatalogUnavailableError(RuntimeError):
@@ -23,6 +26,31 @@ class CatalogFreshness:
     upcoming_row_count: int
 
 
+@dataclass(frozen=True)
+class ProviderReference:
+    key: str
+    name: str
+
+
+@dataclass(frozen=True)
+class GenreReference:
+    content_type: str
+    id: int
+    name: str
+
+
+@dataclass(frozen=True)
+class FilterOptions:
+    content_types: tuple[str, ...]
+    languages: tuple[str, ...]
+    runtime_min: int | None
+    runtime_max: int | None
+    release_year_min: int | None
+    release_year_max: int | None
+    rating_min: float | None
+    rating_max: float | None
+
+
 class CatalogRepository:
     """Repository boundary for local, read-only catalog queries."""
 
@@ -30,11 +58,8 @@ class CatalogRepository:
         self.database_path = database_path
 
     def get_freshness(self) -> CatalogFreshness:
-        if not self.database_path.is_file():
-            raise CatalogUnavailableError("The serving catalog is not available")
-
-        try:
-            with duckdb.connect(str(self.database_path), read_only=True) as connection:
+        with self._connect() as connection:
+            try:
                 row = connection.execute(
                     """
                     select
@@ -47,10 +72,130 @@ class CatalogRepository:
                     from main_marts.catalog_freshness
                     """
                 ).fetchone()
-        except duckdb.Error as error:
-            raise CatalogUnavailableError("The serving catalog could not be read") from error
+            except duckdb.Error as error:
+                raise CatalogUnavailableError("The serving catalog could not be read") from error
 
         if row is None:
             raise CatalogUnavailableError("Catalog freshness metadata is missing")
 
         return CatalogFreshness(*row)
+
+    def list_regions(self) -> tuple[str, ...]:
+        rows = self._fetchall(
+            "select distinct region from main_marts.catalog_availability order by region"
+        )
+        return tuple(row[0] for row in rows)
+
+    def list_providers(self, region: str) -> tuple[ProviderReference, ...]:
+        rows = self._fetchall(
+            """
+            select provider_key, provider_name
+            from main_marts.catalog_availability
+            where region = ?
+            group by provider_key, provider_name
+            order by provider_name, provider_key
+            """,
+            [region],
+        )
+        return tuple(ProviderReference(*row) for row in rows)
+
+    def list_genres(self, scope: CatalogScope) -> tuple[GenreReference, ...]:
+        predicates, parameters = self._scope_predicates(scope, alias="catalog")
+        rows = self._fetchall(
+            f"""
+            select genres.content_type, genres.genre_id, genres.genre_name
+            from main_marts.catalog_availability as catalog
+            inner join main_marts.content_genres as genres
+                on catalog.tmdb_id = genres.tmdb_id
+                and catalog.content_type = genres.content_type
+            where {" and ".join(predicates)}
+            group by genres.content_type, genres.genre_id, genres.genre_name
+            order by genres.content_type, genres.genre_name, genres.genre_id
+            """,  # noqa: S608 -- predicates contain fixed SQL and generated placeholders only.
+            parameters,
+        )
+        return tuple(GenreReference(*row) for row in rows)
+
+    def get_filter_options(self, scope: CatalogScope) -> FilterOptions:
+        predicates, parameters = self._scope_predicates(scope)
+        where_clause = " and ".join(predicates)
+        content_types = self._fetchall(
+            f"""
+            select distinct content_type
+            from main_marts.catalog_availability
+            where {where_clause}
+            order by content_type
+            """,  # noqa: S608 -- predicates contain fixed SQL and generated placeholders only.
+            parameters,
+        )
+        languages = self._fetchall(
+            f"""
+            select distinct original_language
+            from main_marts.catalog_availability
+            where {where_clause} and original_language is not null
+            order by original_language
+            """,  # noqa: S608 -- predicates contain fixed SQL and generated placeholders only.
+            parameters,
+        )
+        ranges = self._fetchone(
+            f"""
+            select
+                min(runtime_minutes), max(runtime_minutes),
+                min(release_year), max(release_year),
+                min(tmdb_rating), max(tmdb_rating)
+            from main_marts.catalog_availability
+            where {where_clause}
+            """,  # noqa: S608 -- predicates contain fixed SQL and generated placeholders only.
+            parameters,
+        )
+        return FilterOptions(
+            content_types=tuple(row[0] for row in content_types),
+            languages=tuple(row[0] for row in languages),
+            runtime_min=ranges[0],
+            runtime_max=ranges[1],
+            release_year_min=ranges[2],
+            release_year_max=ranges[3],
+            rating_min=ranges[4],
+            rating_max=ranges[5],
+        )
+
+    @staticmethod
+    def _scope_predicates(
+        scope: CatalogScope, alias: str | None = None
+    ) -> tuple[list[str], list[Any]]:
+        prefix = f"{alias}." if alias else ""
+        predicates = [f"{prefix}region = ?"]
+        parameters: list[Any] = [scope.region]
+        if scope.providers:
+            placeholders = ", ".join("?" for _ in scope.providers)
+            predicates.append(f"{prefix}provider_key in ({placeholders})")
+            parameters.extend(scope.providers)
+        if scope.content_type is not None:
+            predicates.append(f"{prefix}content_type = ?")
+            parameters.append(scope.content_type.value)
+        return predicates, parameters
+
+    def _connect(self) -> duckdb.DuckDBPyConnection:
+        if not self.database_path.is_file():
+            raise CatalogUnavailableError("The serving catalog is not available")
+        try:
+            return duckdb.connect(str(self.database_path), read_only=True)
+        except duckdb.Error as error:
+            raise CatalogUnavailableError("The serving catalog could not be read") from error
+
+    def _fetchall(self, query: str, parameters: list[Any] | None = None) -> list[tuple[Any, ...]]:
+        with self._connect() as connection:
+            try:
+                return connection.execute(query, parameters or []).fetchall()
+            except duckdb.Error as error:
+                raise CatalogUnavailableError("The serving catalog could not be read") from error
+
+    def _fetchone(self, query: str, parameters: list[Any]) -> tuple[Any, ...]:
+        with self._connect() as connection:
+            try:
+                row = connection.execute(query, parameters).fetchone()
+            except duckdb.Error as error:
+                raise CatalogUnavailableError("The serving catalog could not be read") from error
+        if row is None:
+            raise CatalogUnavailableError("The serving catalog returned no result")
+        return row

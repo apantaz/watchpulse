@@ -30,6 +30,10 @@ The default database is `data/warehouse_serving.duckdb`. Override it with
 
 - `GET /health` — process liveness; it remains available when the catalog is not;
 - `GET /api/v1/catalog/freshness` — warehouse/source timestamps and row counts;
+- `GET /api/v1/catalog/regions` — regions present in the published catalog;
+- `GET /api/v1/catalog/providers?region=GR` — region-aware provider choices;
+- `GET /api/v1/catalog/genres?region=GR` — genres scoped by optional provider/type;
+- `GET /api/v1/catalog/filter-options?region=GR` — scoped types, languages, and ranges;
 - `GET /docs` — interactive OpenAPI documentation.
 
 Catalog failures return HTTP 503 without exposing filesystem paths or DuckDB

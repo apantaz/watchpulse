@@ -247,6 +247,12 @@ the physical catalog before making a candidate database live.
 All sections start from the same region, provider, content type, genre, runtime,
 release year, rating, and language filters.
 
+The v0.4 API represents this universe with one immutable `DiscoveryFilters`
+contract. Region and at least one provider are required. Content type, genre
+IDs, maximum runtime, inclusive release-year bounds, minimum TMDB rating, and
+original language are optional. Validation and normalization happen before the
+repository receives the values; unknown query fields are rejected.
+
 | Section | Required predicate | Date used |
 |---|---|---|
 | Top 10 | `is_available = true` | none |

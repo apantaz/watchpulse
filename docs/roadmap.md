@@ -123,10 +123,13 @@ conflated; their section-level query rules are delivered by v0.4. See the
 
 Goal: expose safe local discovery without upstream calls.
 
-Current status: **in progress (2026-08-21)**. FastAPI, an application factory,
+Current status: **in progress (2026-08-23)**. FastAPI, an application factory,
 environment-backed serving-database configuration, read-only DuckDB repository,
 process health, catalog freshness, safe unavailable-catalog responses, generated
-OpenAPI documentation, and offline integration tests are implemented.
+OpenAPI documentation, and offline integration tests are implemented. The
+shared typed filter contract now validates and normalizes region, providers,
+content type, genres, runtime, release-year range, rating, and language before
+any discovery query is built.
 
 Scope:
 

@@ -134,7 +134,8 @@ regions, region-aware providers, scoped genres, content types, languages, and
 useful runtime/year/rating ranges without upstream calls. One parameterized
 query engine now applies the shared filter universe, controlled availability
 state/sorting, safe pagination, and provider aggregation for every upcoming
-discovery section.
+discovery section. The public Top 10 endpoint now layers current-availability
+and popularity rules onto that engine and exposes all global filters in OpenAPI.
 
 Scope:
 

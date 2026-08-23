@@ -36,7 +36,9 @@ make frontend-dev
 ```
 
 Open <http://127.0.0.1:5173>. The initial application shell displays the API
-and catalog status to prove the browser-to-backend path is working.
+and catalog status to prove the browser-to-backend path is working. Regions and
+streaming services are loaded from the local API, and valid guest selections
+are remembered in browser-local storage without requiring an account.
 
 Vite reads `VITE_API_BASE_URL`; copy `.env.example` to `.env.local` only when
 the backend is not available at the default `http://127.0.0.1:8000` address.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { type CatalogStatus, getCatalogStatus } from "./api/catalog";
+import { DiscoverySetup } from "./components/DiscoverySetup";
 import "./styles.css";
 
 type LoadState =
@@ -58,7 +59,8 @@ export default function App() {
           </div>
         )}
       </section>
-      <p className="coming-next">Region, services, and discovery rails arrive in the next increment.</p>
+      {state.kind === "ready" && <DiscoverySetup />}
+      <p className="coming-next">Global filters and discovery rails arrive in the next increment.</p>
     </main>
   );
 }

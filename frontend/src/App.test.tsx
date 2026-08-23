@@ -14,12 +14,18 @@ test("shows catalog readiness returned by the local API", async () => {
       catalog_row_count: 190,
       current_row_count: 160,
       upcoming_row_count: 30
+    }), { status: 200 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({ regions: [{ code: "GR" }] }), { status: 200 }))
+    .mockResolvedValueOnce(new Response(JSON.stringify({
+      region: "GR",
+      providers: [{ key: "netflix", name: "Netflix" }]
     }), { status: 200 }));
 
   render(<App />);
   expect(screen.getByText("Connecting to WatchPulse…")).toBeInTheDocument();
   expect(await screen.findByText("Ready for discovery")).toBeInTheDocument();
   expect(screen.getByText("160")).toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: /Netflix/ })).toBeInTheDocument();
 });
 
 test("shows an honest error when the catalog is unavailable", async () => {

@@ -13,6 +13,8 @@ export type CatalogFreshness = {
 };
 
 export type CatalogStatus = { api: "online"; freshness: CatalogFreshness };
+export type RegionOption = { code: string };
+export type ProviderOption = { key: string; name: string };
 
 async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -32,4 +34,21 @@ export async function getCatalogStatus(signal?: AbortSignal): Promise<CatalogSta
   ]);
   if (health.status !== "ok") throw new Error("API health check failed");
   return { api: "online", freshness };
+}
+
+export async function getRegions(signal?: AbortSignal): Promise<RegionOption[]> {
+  const response = await getJson<{ regions: RegionOption[] }>("/api/v1/catalog/regions", signal);
+  return response.regions;
+}
+
+export async function getProviders(
+  region: string,
+  signal?: AbortSignal,
+): Promise<ProviderOption[]> {
+  const params = new URLSearchParams({ region });
+  const response = await getJson<{ providers: ProviderOption[] }>(
+    `/api/v1/catalog/providers?${params}`,
+    signal,
+  );
+  return response.providers;
 }

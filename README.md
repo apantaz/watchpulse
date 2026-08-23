@@ -5,12 +5,13 @@ watch based on their region, streaming services, and preferences. External APIs
 populate a local catalog; browsing and filter changes will query WatchPulse's
 own data rather than calling upstream APIs.
 
-The MVP will provide region- and provider-aware discovery across four shared,
+The MVP provides region- and provider-aware discovery across five shared,
 filterable sections:
 
 - Top 10
 - New Releases
 - Recently Added
+- Leaving Soon
 - Upcoming
 
 See [AGENTS.md](AGENTS.md) for the current product requirements and
@@ -26,7 +27,7 @@ Documentation is split by responsibility:
 
 ## Project status
 
-Version `v0.3` is released and `v0.4` is in progress. The repository currently
+Version `v0.4` is released and `v0.5` is next. The repository currently
 includes:
 
 - configurable TMDB discovery by region and provider;
@@ -51,10 +52,10 @@ includes:
 - scoped local title details with aggregated provider availability;
 - unit tests that do not make live API calls.
 
-Version `v0.3` adds a tested dbt-duckdb warehouse, normalized data marts, a
-frontend-ready serving catalog, freshness metadata, and atomic publication that
-preserves the last good database when a candidate build fails. See the
-[v0.3 release notes](docs/releases/v0.3.md).
+Version `v0.4` adds a read-only FastAPI discovery backend, typed global filters,
+parameterized local queries, catalog reference/freshness routes, all five
+discovery sections, and scoped title details. See the
+[v0.4 release notes](docs/releases/v0.4.md).
 
 Add `STREAMING_AVAILABILITY_API_KEY` only when running live lifecycle ingestion;
 offline tests and warehouse builds do not require it.
@@ -83,8 +84,8 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-Install the optional dbt/DuckDB warehouse toolchain when working on v0.3 data
-models:
+Install the optional dbt/DuckDB warehouse toolchain when working on warehouse
+models or the local discovery API:
 
 ```bash
 python -m pip install -e ".[dev,warehouse]"
@@ -133,6 +134,20 @@ settings include:
 - discovery windows for new, recently added, and leaving-soon content.
 
 Never commit `.env`; it is ignored by Git.
+
+## Run the local discovery API
+
+Build and atomically publish the local serving database, then start FastAPI:
+
+```bash
+make dbt-publish
+uvicorn watchpulse.api:create_app --factory --reload
+```
+
+Open `http://127.0.0.1:8000/docs` for the interactive OpenAPI interface. The
+API reads only `WATCHPULSE_SERVING_DB_PATH`; requests never call TMDB or the
+Streaming Availability API. See the [API guide](api/README.md) for routes,
+filters, section semantics, and examples.
 
 ## Dependency management
 
@@ -277,8 +292,8 @@ API calls:
 python -m ingestion.inspect --country GR --limit 20
 ```
 
-This is a Phase 1 diagnostic over the TMDB subscription-catalog seed. It is not
-yet the final lifecycle-aware WatchPulse serving query from `v0.2`/`v0.3`.
+This is a raw-ingestion diagnostic over the TMDB subscription-catalog seed. It
+is not the normalized lifecycle-aware serving query exposed by the v0.4 API.
 
 Before a full backfill, verify that the configured TMDB provider IDs are still
 valid for the selected region:

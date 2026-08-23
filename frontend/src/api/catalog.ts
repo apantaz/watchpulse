@@ -1,3 +1,5 @@
+import { catalogScopeParams, type CatalogScope, type ContentType } from "../discovery";
+
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000").replace(
   /\/$/,
   "",
@@ -15,6 +17,14 @@ export type CatalogFreshness = {
 export type CatalogStatus = { api: "online"; freshness: CatalogFreshness };
 export type RegionOption = { code: string };
 export type ProviderOption = { key: string; name: string };
+export type GenreOption = { content_type: string; id: number; name: string };
+export type FilterOptions = {
+  content_types: string[];
+  languages: string[];
+  runtime_minutes: { minimum: number | null; maximum: number | null };
+  release_year: { minimum: number | null; maximum: number | null };
+  rating: { minimum: number | null; maximum: number | null };
+};
 
 async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -51,4 +61,27 @@ export async function getProviders(
     signal,
   );
   return response.providers;
+}
+
+export async function getGenres(
+  scope: CatalogScope,
+  contentType: ContentType | null,
+  signal?: AbortSignal,
+): Promise<GenreOption[]> {
+  const response = await getJson<{ genres: GenreOption[] }>(
+    `/api/v1/catalog/genres?${catalogScopeParams(scope, contentType)}`,
+    signal,
+  );
+  return [...new Map(response.genres.map((genre) => [genre.id, genre])).values()];
+}
+
+export async function getFilterOptions(
+  scope: CatalogScope,
+  contentType: ContentType | null,
+  signal?: AbortSignal,
+): Promise<FilterOptions> {
+  return getJson<FilterOptions>(
+    `/api/v1/catalog/filter-options?${catalogScopeParams(scope, contentType)}`,
+    signal,
+  );
 }

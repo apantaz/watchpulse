@@ -18,7 +18,7 @@ test("loads region-aware providers and persists the guest selection", async () =
       { key: "disney_plus", name: "Disney+" },
     ] }));
 
-  render(<DiscoverySetup />);
+  render(<DiscoverySetup onScopeChange={vi.fn()} />);
 
   const netflix = await screen.findByRole("button", { name: /Netflix/ });
   fireEvent.click(netflix);
@@ -39,13 +39,13 @@ test("changing region reloads providers and removes an invalid selection", async
     .mockImplementationOnce(() => jsonResponse({ region: "GR", providers: [{ key: "netflix", name: "Netflix" }] }))
     .mockImplementationOnce(() => jsonResponse({ region: "US", providers: [{ key: "hulu", name: "Hulu" }] }));
 
-  render(<DiscoverySetup />);
+  render(<DiscoverySetup onScopeChange={vi.fn()} />);
   expect(await screen.findByRole("button", { name: /Netflix/ })).toHaveAttribute("aria-pressed", "true");
   fireEvent.change(screen.getByLabelText("Region"), { target: { value: "US" } });
 
   expect(await screen.findByRole("button", { name: /Hulu/ })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /Netflix/ })).not.toBeInTheDocument();
-  await waitFor(() => expect(localStorage.getItem("watchpulse.discovery-preferences.v1")).toBe(
-    JSON.stringify({ region: "US", providers: [] }),
-  ));
+  await waitFor(() => expect(JSON.parse(
+    localStorage.getItem("watchpulse.discovery-preferences.v1") ?? "{}",
+  )).toMatchObject({ region: "US", providers: [] }));
 });

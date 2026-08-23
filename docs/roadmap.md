@@ -162,7 +162,10 @@ shell, typed local API client, catalog readiness state, explicit development
 CORS policy, frontend tests, and CI build validation. The second increment adds
 API-driven region and region-aware provider selection, validates restored guest
 choices against the current catalog, and persists valid preferences locally in
-the browser.
+the browser. The third increment adds the shared type, genre, runtime,
+release-year, rating, and language filter contract that every discovery rail
+will consume, including scoped reference data, safe query serialization, reset,
+validation, and local persistence.
 
 Scope:
 

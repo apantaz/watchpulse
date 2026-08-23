@@ -260,3 +260,41 @@ def test_upcoming_filter_contract_is_visible_in_openapi() -> None:
     assert "region" in parameters
     assert "providers" in parameters
     assert "content_type" in parameters
+
+
+def test_leaving_soon_uses_current_expiration_window() -> None:
+    repository = FakeRepository()
+    settings = Settings.from_env({"SUPPORTED_REGIONS": "GR", "LEAVING_SOON_DAYS": "21"})
+    app = create_app(settings=settings, repository=repository)
+
+    response = _get(
+        app,
+        "/api/v1/discovery/leaving-soon",
+        [("region", "GR"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 200
+    assert repository.request is not None
+    assert repository.request.availability is AvailabilityState.CURRENT
+    assert repository.request.sort is DiscoverySort.EXPIRATION
+    assert repository.request.limit == 20
+    assert repository.request.expires_from is not None
+    assert repository.request.expires_to is not None
+    assert repository.request.expires_to - repository.request.expires_from == timedelta(days=21)
+    payload = response.json()
+    assert payload["section"] == "leaving_soon"
+    assert payload["window_days"] == 21
+    assert datetime.fromisoformat(payload["as_of"]) == repository.request.expires_from
+    assert payload["items"] == []
+
+
+def test_leaving_soon_filter_contract_is_visible_in_openapi() -> None:
+    app = create_app(repository=FakeRepository())
+
+    schema = _get(app, "/openapi.json").json()
+    operation = schema["paths"]["/api/v1/discovery/leaving-soon"]["get"]
+    parameters = {parameter["name"] for parameter in operation["parameters"]}
+
+    assert "region" in parameters
+    assert "providers" in parameters
+    assert "rating_min" in parameters

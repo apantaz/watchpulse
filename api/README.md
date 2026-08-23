@@ -38,6 +38,7 @@ The default database is `data/warehouse_serving.duckdb`. Override it with
 - `GET /api/v1/discovery/new-releases?region=GR&providers=netflix` — recent releases;
 - `GET /api/v1/discovery/recently-added?region=GR&providers=netflix` — provider additions;
 - `GET /api/v1/discovery/upcoming?region=GR&providers=netflix` — future arrivals;
+- `GET /api/v1/discovery/leaving-soon?region=GR&providers=netflix` — known expirations;
 - `GET /docs` — interactive OpenAPI documentation.
 
 Catalog failures return HTTP 503 without exposing filesystem paths or DuckDB
@@ -129,4 +130,19 @@ future window; its bounded response returns the next 20 matching titles.
 
 ```text
 GET /api/v1/discovery/upcoming?region=GR&providers=netflix
+```
+
+### Leaving Soon
+
+Leaving Soon selects currently available rows whose non-null `expires_on`
+timestamp falls between the response's `as_of` timestamp and
+`LEAVING_SOON_DAYS` later, ordered by nearest expiration. WatchPulse never
+infers an expiration when lifecycle evidence is absent.
+
+The first-release ingestion policy requests only `new` and `upcoming`, so this
+route currently returns an honest empty list for the retained catalog. It will
+begin returning results when `expiring` ingestion is deliberately enabled.
+
+```text
+GET /api/v1/discovery/leaving-soon?region=GR&providers=netflix
 ```

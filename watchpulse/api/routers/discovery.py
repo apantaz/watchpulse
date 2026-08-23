@@ -9,6 +9,7 @@ from fastapi import APIRouter, Request
 from watchpulse.api.filters import DiscoveryFiltersQuery
 from watchpulse.api.models import (
     CatalogItemResponse,
+    LeavingSoonResponse,
     NewReleasesResponse,
     RankedCatalogItemResponse,
     RecentlyAddedResponse,
@@ -110,6 +111,29 @@ async def upcoming(request: Request, filters: DiscoveryFiltersQuery) -> Upcoming
         section="upcoming",
         filters=filters,
         as_of=as_of,
+        count=len(items),
+        items=tuple(CatalogItemResponse.model_validate(item) for item in items),
+    )
+
+
+@router.get("/leaving-soon", response_model=LeavingSoonResponse)
+async def leaving_soon(request: Request, filters: DiscoveryFiltersQuery) -> LeavingSoonResponse:
+    as_of = datetime.now(UTC)
+    window_days = request.app.state.settings.leaving_soon_days
+    query = DiscoveryRequest(
+        filters=filters,
+        availability=AvailabilityState.CURRENT,
+        sort=DiscoverySort.EXPIRATION,
+        limit=20,
+        expires_from=as_of,
+        expires_to=as_of + timedelta(days=window_days),
+    )
+    items = _repository(request).discover(query)
+    return LeavingSoonResponse(
+        section="leaving_soon",
+        filters=filters,
+        as_of=as_of,
+        window_days=window_days,
         count=len(items),
         items=tuple(CatalogItemResponse.model_validate(item) for item in items),
     )

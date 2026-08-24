@@ -75,6 +75,11 @@ export function DiscoverySetup({ onScopeChange }: DiscoverySetupProps) {
     );
   };
 
+  const allSelected = providers.length > 0 && selectedProviders.length === providers.length;
+  const toggleAllProviders = () => setSelectedProviders(
+    allSelected ? [] : providers.map(({ key }) => key),
+  );
+
   return (
     <section className="discovery-setup" aria-labelledby="setup-title">
       <div className="setup-heading">
@@ -101,7 +106,12 @@ export function DiscoverySetup({ onScopeChange }: DiscoverySetupProps) {
           </label>
 
           <fieldset className="provider-fieldset" disabled={state.kind !== "ready"}>
-            <legend>Streaming services</legend>
+            <legend>
+              <span>Streaming services</span>
+              <button type="button" onClick={toggleAllProviders}>
+                {allSelected ? "Clear all" : "Select all"}
+              </button>
+            </legend>
             <div className="provider-grid">
               {providers.map((provider) => {
                 const selected = selectedProviders.includes(provider.key);

@@ -176,6 +176,12 @@ independent loading, empty, failure, and retry behavior.
 The sixth increment adds Recently Added based on provider addition time rather
 than content release date, and extracts a reusable lifecycle rail for consistent
 loading, empty, failure, retry, and card behavior across the remaining sections.
+The seventh increment adds Upcoming from future provider arrival evidence and
+surfaces expected arrival dates directly on cards without browser-side upstream
+requests. Targeted TMDB reconciliation lets an available series also carry an
+upcoming-season state without guessing a season number.
+It also consolidates discovery into a content-first workspace with a sticky
+desktop filter sidebar, denser rails, and a responsive stacked mobile layout.
 Verified provider deep links are retained from historical lifecycle payloads
 and exposed as optional safe card actions; TMDB-only rows remain unlinked
 rather than receiving guessed destinations.

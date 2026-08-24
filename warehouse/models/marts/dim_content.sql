@@ -7,6 +7,8 @@ select
     release_date,
     release_year,
     runtime_minutes,
+    episode_count,
+    season_count,
     genre_ids,
     original_language,
     tmdb_rating,

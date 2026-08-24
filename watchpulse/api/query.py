@@ -78,8 +78,8 @@ class DiscoveryQueryBuilder:
     """Build discovery SQL using only fixed fragments and bound values."""
 
     _availability_predicates = {
-        AvailabilityState.CURRENT: ("catalog.is_available = true and catalog.is_upcoming = false"),
-        AvailabilityState.UPCOMING: ("catalog.is_upcoming = true and catalog.is_available = false"),
+        AvailabilityState.CURRENT: "catalog.is_available = true",
+        AvailabilityState.UPCOMING: "catalog.is_upcoming = true",
         AvailabilityState.ANY: "true",
     }
     _sort_expressions = {
@@ -204,7 +204,9 @@ class DiscoveryQueryBuilder:
                     )
                     order by catalog.provider_name, catalog.provider_key,
                              catalog.monetization_type
-                ) as availabilities
+                ) as availabilities,
+                catalog.episode_count,
+                catalog.season_count
             from main_marts.catalog_availability as catalog
             where {" and ".join(predicates)}
             group by
@@ -223,7 +225,9 @@ class DiscoveryQueryBuilder:
                 catalog.popularity_score,
                 catalog.poster_path,
                 catalog.backdrop_path,
-                catalog.metadata_source
+                catalog.metadata_source,
+                catalog.episode_count,
+                catalog.season_count
             order by {self._sort_expressions[request.sort]},
                      catalog.tmdb_id, catalog.content_type
             limit ? offset ?

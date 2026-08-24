@@ -50,7 +50,9 @@ def _create_catalog(path: Path) -> None:
                 metadata_source varchar,
                 availability_source varchar,
                 last_updated_at timestamp,
-                watch_url varchar
+                watch_url varchar,
+                episode_count integer,
+                season_count integer
             )
             """
         )
@@ -201,7 +203,7 @@ def _create_catalog(path: Path) -> None:
                 datetime(2026, 8, 22),
             ),
         ]
-        rows = [(*row, None) for row in rows]
+        rows = [(*row, None, None, None) for row in rows]
         placeholders = ", ".join("?" for _ in rows[0])
         connection.executemany(
             f"insert into main_marts.catalog_availability values ({placeholders})",

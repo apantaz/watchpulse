@@ -12,7 +12,6 @@ export function RecentlyAddedRail({ scope, filters }: RecentlyAddedRailProps) {
     <CatalogRail
       id="recently-added-title"
       title="Recently Added"
-      subtitle="Fresh arrivals on your streaming services"
       loadingLabel="Loading Recently Added"
       emptyTitle="No recently added titles match these filters."
       emptyHint="Try another provider or remove one of the active filters."
@@ -20,6 +19,7 @@ export function RecentlyAddedRail({ scope, filters }: RecentlyAddedRailProps) {
       scope={scope}
       filters={filters}
       load={getRecentlyAdded}
+      lifecycleDate="available_since"
     />
   );
 }

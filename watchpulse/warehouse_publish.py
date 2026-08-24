@@ -45,7 +45,9 @@ def validate_candidate(candidate_path: Path) -> None:
     catalog_count, current_count, upcoming_count, built_at, source_updated_at = freshness_rows[0]
     if actual_row_count <= 0 or catalog_count != actual_row_count:
         raise ValueError("Candidate catalog is empty or its recorded count is invalid")
-    if current_count + upcoming_count != catalog_count:
+    if catalog_count > current_count + upcoming_count or catalog_count < max(
+        current_count, upcoming_count
+    ):
         raise ValueError("Candidate availability-state counts are inconsistent")
     if built_at is None or source_updated_at is None:
         raise ValueError("Candidate freshness timestamps must not be null")

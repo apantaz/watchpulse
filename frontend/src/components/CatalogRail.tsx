@@ -12,7 +12,6 @@ type CatalogLoader = (
 type CatalogRailProps = {
   id: string;
   title: string;
-  subtitle: string;
   loadingLabel: string;
   emptyTitle: string;
   emptyHint: string;
@@ -20,6 +19,7 @@ type CatalogRailProps = {
   scope: CatalogScope;
   filters: GlobalFilters;
   load: CatalogLoader;
+  lifecycleDate?: "available_since" | "available_from";
 };
 
 type RailState =
@@ -30,7 +30,6 @@ type RailState =
 export function CatalogRail({
   id,
   title,
-  subtitle,
   loadingLabel,
   emptyTitle,
   emptyHint,
@@ -38,6 +37,7 @@ export function CatalogRail({
   scope,
   filters,
   load,
+  lifecycleDate,
 }: CatalogRailProps) {
   const [state, setState] = useState<RailState>({ kind: "loading" });
   const [retry, setRetry] = useState(0);
@@ -61,10 +61,7 @@ export function CatalogRail({
   return (
     <section className="discovery-rail" aria-labelledby={id} aria-busy={state.kind === "loading"}>
       <div className="rail-heading">
-        <div>
-          <p className="status-label">{subtitle}</p>
-          <h2 id={id}>{title}</h2>
-        </div>
+        <h2 id={id}>{title}</h2>
         {state.kind === "ready" && state.items.length > 0 && <span>{state.items.length} titles</span>}
       </div>
 
@@ -91,7 +88,11 @@ export function CatalogRail({
       {state.kind === "ready" && state.items.length > 0 && (
         <div className="title-row">
           {state.items.map((item) => (
-            <TitleCard item={item} key={`${item.content_type}-${item.tmdb_id}`} />
+            <TitleCard
+              item={item}
+              lifecycleDate={lifecycleDate}
+              key={`${item.content_type}-${item.tmdb_id}`}
+            />
           ))}
         </div>
       )}

@@ -33,10 +33,7 @@ export function TopTenRail({ scope, filters }: TopTenRailProps) {
   return (
     <section className="discovery-rail" aria-labelledby="top-ten-title" aria-busy={state.kind === "loading"}>
       <div className="rail-heading">
-        <div>
-          <p className="status-label">Popular across your services</p>
-          <h2 id="top-ten-title">Top 10 for you</h2>
-        </div>
+        <h2 id="top-ten-title">Top 10</h2>
         {state.kind === "ready" && state.items.length > 0 && <span>{state.items.length} titles</span>}
       </div>
 

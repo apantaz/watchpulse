@@ -32,7 +32,7 @@ models:
               [tmdb_id, content_type, region, provider_key, monetization_type]
       - dbt_utils.expression_is_true:
           arguments:
-            expression: "is_available <> is_upcoming"
+            expression: "is_available or is_upcoming"
     columns:
       - name: tmdb_id
         description: "{{ doc('col_tmdb_id') }}"
@@ -64,6 +64,12 @@ models:
         data_type: integer
       - name: runtime_minutes
         description: "{{ doc('col_runtime_minutes') }}"
+        data_type: integer
+      - name: episode_count
+        description: "{{ doc('col_episode_count') }}"
+        data_type: integer
+      - name: season_count
+        description: "{{ doc('col_season_count') }}"
         data_type: integer
       - name: original_language
         description: "{{ doc('col_original_language') }}"
@@ -148,7 +154,7 @@ models:
     tests:
       - dbt_utils.expression_is_true:
           arguments:
-            expression: "catalog_row_count = current_row_count + upcoming_row_count"
+            expression: "catalog_row_count <= current_row_count + upcoming_row_count and catalog_row_count >= greatest(current_row_count, upcoming_row_count)"
       - dbt_utils.expression_is_true:
           arguments:
             expression: "catalog_row_count > 0"
@@ -207,6 +213,8 @@ models:
       - {name: release_date, description: "{{ doc('col_release_date') }}", data_type: date}
       - {name: release_year, description: "{{ doc('col_release_year') }}", data_type: integer}
       - {name: runtime_minutes, description: "{{ doc('col_runtime_minutes') }}", data_type: integer}
+      - {name: episode_count, description: "{{ doc('col_episode_count') }}", data_type: integer}
+      - {name: season_count, description: "{{ doc('col_season_count') }}", data_type: integer}
       - {name: genre_ids, description: "{{ doc('col_genre_ids') }}", data_type: json}
       - {name: original_language, description: "{{ doc('col_original_language') }}", data_type: varchar}
       - {name: tmdb_rating, description: "{{ doc('col_tmdb_rating') }}", data_type: double}
@@ -276,7 +284,7 @@ models:
           arguments:
             combination_of_columns: [tmdb_id, content_type, region, provider_key, monetization_type]
       - dbt_utils.expression_is_true:
-          arguments: {expression: "is_available <> is_upcoming"}
+          arguments: {expression: "is_available or is_upcoming"}
     columns:
       - {name: tmdb_id, description: "{{ doc('col_tmdb_id') }}", data_type: bigint, tests: [not_null]}
       - name: content_type

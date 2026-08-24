@@ -74,6 +74,8 @@ def _catalog_row(
         "tmdb_discovery" if is_available else "streaming_availability",
         datetime.now(UTC),
         "https://www.netflix.com/title/example" if provider_key == "netflix" else None,
+        None,
+        None,
     )
 
 
@@ -96,7 +98,7 @@ def _create_catalog(path: Path) -> None:
                 is_available boolean, is_upcoming boolean, poster_path varchar,
                 backdrop_path varchar, metadata_source varchar,
                 availability_source varchar, last_updated_at timestamptz,
-                watch_url varchar
+                watch_url varchar, episode_count integer, season_count integer
             )
             """
         )

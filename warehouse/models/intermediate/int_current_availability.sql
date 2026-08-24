@@ -6,7 +6,8 @@ with additions as (
         provider_key,
         monetization_type,
         max(event_effective_at) as available_since,
-        max(ingested_at) as event_ingested_at
+        max(ingested_at) as event_ingested_at,
+        arg_max(watch_url, ingested_at) filter (where watch_url is not null) as watch_url
     from {{ ref('int_streaming_events') }}
     where event_type = 'new'
     group by 1, 2, 3, 4, 5
@@ -21,6 +22,7 @@ select
     additions.available_since,
     cast(null as timestamptz) as available_from,
     cast(null as timestamptz) as expires_on,
+    additions.watch_url,
     true as is_available,
     false as is_upcoming,
     'tmdb_discovery' as source,

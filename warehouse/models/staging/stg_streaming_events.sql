@@ -20,11 +20,25 @@ with events as (
         hive_partitioning = false,
         union_by_name = true
     )
+),
+
+links as (
+    select * from {{ ref('stg_streaming_links') }}
 )
 
-select *
+select
+    events.*,
+    links.watch_url
 from events
+left join links
+    on events.tmdb_id = links.tmdb_id
+    and events.content_type = links.content_type
+    and events.region = links.region
+    and events.provider_key = links.provider_key
+    and events.monetization_type = links.monetization_type
+    and events.event_type = links.event_type
+    and events.event_date is not distinct from links.event_date
 qualify row_number() over (
-    partition by event_id
-    order by ingested_at desc
+    partition by events.event_id
+    order by events.ingested_at desc
 ) = 1

@@ -1,6 +1,23 @@
 version: 2
 
 models:
+  - name: stg_streaming_links
+    description: "{{ doc('stg_streaming_links') }}"
+    meta:
+      owner: watchpulse
+      source: streaming_availability
+      grain: one verified link per lifecycle event identity
+    columns:
+      - {name: tmdb_id, description: "{{ doc('col_tmdb_id') }}", data_type: bigint, tests: [not_null]}
+      - {name: content_type, description: "{{ doc('col_content_type') }}", data_type: varchar, tests: [not_null]}
+      - {name: region, description: "{{ doc('col_region') }}", data_type: varchar, tests: [not_null]}
+      - {name: provider_key, description: "{{ doc('col_provider_key') }}", data_type: varchar, tests: [not_null]}
+      - {name: monetization_type, description: "{{ doc('col_monetization_type') }}", data_type: varchar, tests: [not_null]}
+      - {name: event_type, description: "{{ doc('col_event_type') }}", data_type: varchar, tests: [not_null]}
+      - {name: event_date, description: "{{ doc('col_event_date') }}", data_type: timestamptz}
+      - {name: watch_url, description: "{{ doc('col_watch_url') }}", data_type: varchar, tests: [not_null]}
+      - {name: fetched_at, description: "{{ doc('col_fetched_at') }}", data_type: timestamptz, tests: [not_null]}
+
   - name: stg_tmdb_discovery
     description: "{{ doc('stg_tmdb_discovery') }}"
     meta:
@@ -153,6 +170,9 @@ models:
         description: "{{ doc('col_ingested_at') }}"
         data_type: timestamptz
         tests: [not_null]
+      - name: watch_url
+        description: "{{ doc('col_watch_url') }}"
+        data_type: varchar
 
   - name: stg_streaming_shows
     description: "{{ doc('stg_streaming_shows') }}"

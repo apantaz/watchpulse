@@ -165,6 +165,9 @@ models:
       - name: source_event_id
         description: "{{ doc('col_source_event_id') }}"
         data_type: varchar
+      - name: watch_url
+        description: "{{ doc('col_watch_url') }}"
+        data_type: varchar
       - name: ingested_at
         description: "{{ doc('col_ingested_at') }}"
         data_type: timestamptz
@@ -214,6 +217,9 @@ models:
       - name: expires_on
         description: "{{ doc('col_expires_on') }}"
         data_type: timestamptz
+      - name: watch_url
+        description: "{{ doc('col_watch_url') }}"
+        data_type: varchar
       - name: is_available
         description: "{{ doc('col_is_available') }}"
         data_type: boolean

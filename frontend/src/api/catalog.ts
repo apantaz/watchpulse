@@ -1,4 +1,10 @@
-import { catalogScopeParams, type CatalogScope, type ContentType } from "../discovery";
+import {
+  catalogScopeParams,
+  discoveryParams,
+  type CatalogScope,
+  type ContentType,
+  type GlobalFilters,
+} from "../discovery";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000").replace(
   /\/$/,
@@ -25,6 +31,40 @@ export type FilterOptions = {
   release_year: { minimum: number | null; maximum: number | null };
   rating: { minimum: number | null; maximum: number | null };
 };
+export type Availability = {
+  provider_key: string;
+  provider_name: string;
+  monetization_type: string;
+  available_since: string | null;
+  available_from: string | null;
+  expires_on: string | null;
+  is_available: boolean;
+  is_upcoming: boolean;
+  source: string;
+  watch_url: string | null;
+};
+export type CatalogItem = {
+  tmdb_id: number;
+  content_type: string;
+  title: string;
+  original_title: string | null;
+  overview: string | null;
+  release_date: string | null;
+  release_year: number | null;
+  runtime_minutes: number | null;
+  original_language: string | null;
+  genre_ids: number[];
+  genre_names: string[];
+  tmdb_rating: number | null;
+  vote_count: number | null;
+  popularity_score: number | null;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  metadata_source: string;
+  last_updated_at: string;
+  availabilities: Availability[];
+};
+export type RankedCatalogItem = CatalogItem & { rank: number };
 
 async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -84,4 +124,16 @@ export async function getFilterOptions(
     `/api/v1/catalog/filter-options?${catalogScopeParams(scope, contentType)}`,
     signal,
   );
+}
+
+export async function getTopTen(
+  scope: CatalogScope,
+  filters: GlobalFilters,
+  signal?: AbortSignal,
+): Promise<RankedCatalogItem[]> {
+  const response = await getJson<{ items: RankedCatalogItem[] }>(
+    `/api/v1/discovery/top-10?${discoveryParams(scope, filters)}`,
+    signal,
+  );
+  return response.items;
 }

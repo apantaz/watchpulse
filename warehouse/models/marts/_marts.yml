@@ -110,6 +110,9 @@ models:
       - name: expires_on
         description: "{{ doc('col_expires_on') }}"
         data_type: timestamptz
+      - name: watch_url
+        description: "{{ doc('col_watch_url') }}"
+        data_type: varchar
       - name: is_available
         description: "{{ doc('col_is_available') }}"
         data_type: boolean
@@ -295,6 +298,7 @@ models:
       - {name: available_since, description: "{{ doc('col_available_since') }}", data_type: timestamptz}
       - {name: available_from, description: "{{ doc('col_available_from') }}", data_type: timestamptz}
       - {name: expires_on, description: "{{ doc('col_expires_on') }}", data_type: timestamptz}
+      - {name: watch_url, description: "{{ doc('col_watch_url') }}", data_type: varchar}
       - {name: is_available, description: "{{ doc('col_is_available') }}", data_type: boolean, tests: [not_null]}
       - {name: is_upcoming, description: "{{ doc('col_is_upcoming') }}", data_type: boolean, tests: [not_null]}
       - {name: source, description: "{{ doc('col_source') }}", data_type: varchar, tests: [not_null]}
@@ -335,6 +339,7 @@ models:
       - {name: event_date, description: "{{ doc('col_event_date') }}", data_type: timestamptz}
       - {name: available_from, description: "{{ doc('col_available_from') }}", data_type: timestamptz}
       - {name: expires_on, description: "{{ doc('col_expires_on') }}", data_type: timestamptz}
+      - {name: watch_url, description: "{{ doc('col_watch_url') }}", data_type: varchar}
       - {name: event_effective_at, description: "{{ doc('col_event_effective_at') }}", data_type: timestamptz}
       - {name: source, description: "{{ doc('col_source') }}", data_type: varchar, tests: [not_null]}
       - {name: source_event_id, description: "{{ doc('col_source_event_id') }}", data_type: varchar}

@@ -34,6 +34,7 @@ def test_changes_map_to_region_scoped_events() -> None:
     assert events[0].provider_key == "netflix"
     assert events[0].region == "GR"
     assert events[0].event_type == "new"
+    assert events[0].watch_url == "https://www.netflix.com/title/example"
     assert events[1].content_type == "tv"
     assert events[1].event_type == "upcoming"
     assert events[1].event_date is None
@@ -47,6 +48,13 @@ def test_event_identity_is_deterministic() -> None:
     second = events_from_changes(payload, region="GR")[0]
 
     assert first.event_id == second.event_id
+
+
+def test_adapter_discards_non_https_watch_links() -> None:
+    payload = json.loads(FIXTURE.read_text())
+    payload["changes"][0]["link"] = "javascript:alert(1)"
+
+    assert events_from_changes(payload, region="GR")[0].watch_url is None
 
 
 def test_events_are_written_to_region_partition(tmp_path: Path) -> None:

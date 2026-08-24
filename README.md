@@ -27,7 +27,7 @@ Documentation is split by responsibility:
 
 ## Project status
 
-Version `v0.4` is released and `v0.5` is next. The repository currently
+Version `v0.4` is released and `v0.5` frontend discovery is in progress. The repository currently
 includes:
 
 - configurable TMDB discovery by region and provider;
@@ -50,6 +50,10 @@ includes:
 - a parameterized global filter engine with Top 10, New Releases, Recently
   Added, Upcoming, and Leaving Soon endpoints;
 - scoped local title details with aggregated provider availability;
+- a responsive React frontend with region-aware provider selection and shared
+  content type, genre, runtime, release-year, rating, and language filters;
+- a filter-reactive Top 10 rail with reusable ranked poster cards and explicit
+  loading, empty, failure, and retry states;
 - unit tests that do not make live API calls.
 
 Version `v0.4` adds a read-only FastAPI discovery backend, typed global filters,
@@ -426,7 +430,7 @@ ingestion/sources/tmdb/  TMDB client, adapter, and provider configuration
 ingestion/tests/         Offline unit tests and fixtures
 warehouse/               Planned dbt-duckdb transformation project
 api/                     Planned read-only discovery backend
-frontend/                Planned guest-first discovery UI
+frontend/                React guest-first discovery UI
 scripts/                 Planned safe operational commands
 tests/                   Cross-component and end-to-end tests
 .github/workflows/       CI, ingestion automation, and future deployment

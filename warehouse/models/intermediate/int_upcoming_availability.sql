@@ -23,6 +23,7 @@ select
     cast(null as timestamptz) as available_since,
     upcoming.event_effective_at as available_from,
     cast(null as timestamptz) as expires_on,
+    upcoming.watch_url,
     false as is_available,
     true as is_upcoming,
     upcoming.source,

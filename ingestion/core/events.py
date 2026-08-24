@@ -48,6 +48,7 @@ def write_streaming_events(
         "source": [],
         "source_event_id": [],
         "ingested_at": [],
+        "watch_url": [],
     }
     for event in events:
         for field in rows:
@@ -78,6 +79,7 @@ def read_streaming_events(*, lake_root: Path, source: str, region: str) -> list[
                     source=str(row["source"]),
                     source_event_id=row["source_event_id"],
                     ingested_at=row["ingested_at"],
+                    watch_url=row.get("watch_url"),
                 )
             )
     return events

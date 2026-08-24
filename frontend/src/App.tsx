@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { type CatalogStatus, getCatalogStatus } from "./api/catalog";
 import { DiscoverySetup } from "./components/DiscoverySetup";
 import { GlobalFilters } from "./components/GlobalFilters";
+import { TopTenRail } from "./components/TopTenRail";
 import { type CatalogScope, type GlobalFilters as FilterValue } from "./discovery";
 import { loadPreferences } from "./preferences";
 import "./styles.css";
@@ -51,39 +52,28 @@ export default function App() {
         <a className="brand" href="/" aria-label="WatchPulse home">
           <span className="pulse" aria-hidden="true" />WatchPulse
         </a>
-        <span className="version">v0.5 preview</span>
+        {state.kind === "ready" ? (
+          <span className="freshness"><span className="status-dot" />Updated {formatRefresh(state.status.freshness.latest_source_updated_at)}</span>
+        ) : <span className="version">v0.5 preview</span>}
       </nav>
       <section className="hero">
         <p className="eyebrow">YOUR STREAMS. ONE DECISION.</p>
-        <h1>Find your next<br /><span>great watch.</span></h1>
+        <h1>Find your next <span>great watch.</span></h1>
         <p className="intro">WatchPulse searches the catalog available on your services and in your region—without the endless scroll.</p>
       </section>
-      <section className="status-card" aria-live="polite">
-        <div>
-          <p className="status-label">Local discovery catalog</p>
-          {state.kind === "loading" && <h2>Connecting to WatchPulse…</h2>}
-          {state.kind === "error" && <h2>{state.message}</h2>}
-          {state.kind === "ready" && <h2>Ready for discovery</h2>}
-        </div>
-        {state.kind === "loading" && <span className="status-dot loading" aria-label="Loading" />}
-        {state.kind === "error" && <span className="status-dot error" aria-label="Offline" />}
-        {state.kind === "ready" && (
-          <div className="catalog-summary">
-            <span className="status-dot" aria-label="Online" />
-            <strong>{state.status.freshness.current_row_count.toLocaleString()}</strong>
-            <span>available titles</span>
-            <small>Refreshed {formatRefresh(state.status.freshness.latest_source_updated_at)}</small>
-          </div>
-        )}
-      </section>
+      {state.kind === "loading" && <p className="catalog-notice" aria-live="polite">Connecting to WatchPulse…</p>}
+      {state.kind === "error" && <p className="catalog-notice error" role="alert">{state.message}</p>}
       {state.kind === "ready" && <DiscoverySetup onScopeChange={handleScopeChange} />}
       {scope && scope.providers.length > 0 && (
-        <GlobalFilters scope={scope} value={filters} onChange={setFilters} />
+        <>
+          <GlobalFilters scope={scope} value={filters} onChange={setFilters} />
+          <TopTenRail scope={scope} filters={filters} />
+        </>
       )}
       {scope && scope.providers.length === 0 && (
         <p className="selection-prompt">Select at least one streaming service to refine your catalog.</p>
       )}
-      <p className="coming-next">Discovery rails arrive in the next increment.</p>
+      <p className="coming-next">New Releases, Recently Added, Upcoming, and Leaving Soon arrive next.</p>
     </main>
   );
 }

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime, timezone
 from typing import Any, cast
+from urllib.parse import urlparse
 
 from ingestion.sources.streaming_availability.config import PROVIDER_MAP
 from watchpulse.models import (
@@ -64,9 +65,19 @@ def events_from_changes(
                 source="streaming_availability",
                 source_event_id=None,
                 ingested_at=observed_at,
+                watch_url=_watch_url(change.get("link")),
             )
         )
     return events
+
+
+def _watch_url(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    parsed = urlparse(value.strip())
+    if parsed.scheme != "https" or not parsed.hostname:
+        return None
+    return value.strip()
 
 
 def _timestamp(value: int | None) -> datetime | None:

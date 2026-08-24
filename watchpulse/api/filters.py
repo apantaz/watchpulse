@@ -129,6 +129,21 @@ class TitleScope(BaseModel):
 DiscoveryFiltersQuery = Annotated[DiscoveryFilters, Query()]
 """FastAPI query binding reused by every discovery endpoint."""
 
+
+class TitleSearchFilters(DiscoveryFilters):
+    """Global discovery filters plus a validated local title query."""
+
+    query: str = Field(min_length=2, max_length=100)
+
+    @field_validator("query", mode="before")
+    @classmethod
+    def normalize_query(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+
+TitleSearchFiltersQuery = Annotated[TitleSearchFilters, Query()]
+"""FastAPI query binding for title search."""
+
 CatalogScopeQuery = Annotated[CatalogScope, Query()]
 """FastAPI query binding for region/provider-aware reference options."""
 

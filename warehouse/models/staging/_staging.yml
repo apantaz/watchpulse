@@ -1,6 +1,62 @@
 version: 2
 
 models:
+  - name: stg_tmdb_watch_providers
+    description: "{{ doc('stg_tmdb_watch_providers') }}"
+    meta:
+      owner: watchpulse
+      source: tmdb
+      grain: one row per content, region, provider, and monetization type
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [tmdb_id, content_type, region, provider_key, monetization_type]
+    columns:
+      - {name: tmdb_id, description: "{{ doc('col_tmdb_id') }}", data_type: bigint, tests: [not_null]}
+      - {name: content_type, description: "{{ doc('col_content_type') }}", data_type: varchar, tests: [not_null]}
+      - {name: region, description: "{{ doc('col_region') }}", data_type: varchar, tests: [not_null]}
+      - {name: provider_key, description: "{{ doc('col_provider_key') }}", data_type: varchar, tests: [not_null]}
+      - {name: monetization_type, description: "{{ doc('col_monetization_type') }}", data_type: varchar, tests: [not_null]}
+      - {name: source_updated_at, description: "{{ doc('col_source_updated_at') }}", data_type: timestamptz, tests: [not_null]}
+      - {name: source_file, description: "{{ doc('col_source_file') }}", data_type: varchar, tests: [not_null]}
+
+  - name: stg_tmdb_metadata
+    description: "{{ doc('stg_tmdb_metadata') }}"
+    meta:
+      owner: watchpulse
+      source: tmdb
+      grain: one row per tmdb_id and content_type
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [tmdb_id, content_type]
+    columns:
+      - {name: tmdb_id, description: "{{ doc('col_tmdb_id') }}", data_type: bigint, tests: [not_null]}
+      - name: content_type
+        description: "{{ doc('col_content_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [movie, tv]
+      - {name: title, description: "{{ doc('col_title') }}", data_type: varchar, tests: [not_null]}
+      - {name: original_title, description: "{{ doc('col_original_title') }}", data_type: varchar}
+      - {name: overview, description: "{{ doc('col_overview') }}", data_type: varchar}
+      - {name: release_date, description: "{{ doc('col_release_date') }}", data_type: date}
+      - {name: runtime_minutes, description: "{{ doc('col_runtime_minutes') }}", data_type: integer}
+      - {name: episode_count, description: "{{ doc('col_episode_count') }}", data_type: integer}
+      - {name: season_count, description: "{{ doc('col_season_count') }}", data_type: integer}
+      - {name: genre_ids, description: "{{ doc('col_genre_ids') }}", data_type: json}
+      - {name: original_language, description: "{{ doc('col_original_language') }}", data_type: varchar}
+      - {name: tmdb_rating, description: "{{ doc('col_tmdb_rating') }}", data_type: double}
+      - {name: vote_count, description: "{{ doc('col_vote_count') }}", data_type: bigint, tests: [not_null]}
+      - {name: tmdb_popularity, description: "{{ doc('col_tmdb_popularity') }}", data_type: double}
+      - {name: poster_path, description: "{{ doc('col_poster_path') }}", data_type: varchar}
+      - {name: backdrop_path, description: "{{ doc('col_backdrop_path') }}", data_type: varchar}
+      - {name: source_updated_at, description: "{{ doc('col_source_updated_at') }}", data_type: timestamptz, tests: [not_null]}
+      - {name: source_file, description: "{{ doc('col_source_file') }}", data_type: varchar, tests: [not_null]}
+
   - name: stg_streaming_links
     description: "{{ doc('stg_streaming_links') }}"
     meta:

@@ -11,6 +11,7 @@ from watchpulse.api.filters import (
     DiscoveryFilters,
     DiscoveryFiltersQuery,
     TitleScopeQuery,
+    TitleSearchFiltersQuery,
 )
 from watchpulse.api.models import (
     CatalogItemResponse,
@@ -19,6 +20,7 @@ from watchpulse.api.models import (
     RankedCatalogItemResponse,
     RecentlyAddedResponse,
     TitleDetailsResponse,
+    TitleSearchResponse,
     TopTenResponse,
     UpcomingResponse,
 )
@@ -30,6 +32,28 @@ router = APIRouter(prefix="/api/v1/discovery", tags=["discovery"])
 
 def _repository(request: Request) -> CatalogRepository:
     return request.app.state.catalog_repository
+
+
+@router.get("/search", response_model=TitleSearchResponse)
+async def search_titles(
+    request: Request,
+    search: TitleSearchFiltersQuery,
+) -> TitleSearchResponse:
+    filters = DiscoveryFilters.model_validate(search.model_dump(exclude={"query"}))
+    discovery = DiscoveryRequest(
+        filters=filters,
+        availability=AvailabilityState.ANY,
+        sort=DiscoverySort.POPULARITY,
+        limit=8,
+        title_query=search.query,
+    )
+    items = _repository(request).discover(discovery)
+    return TitleSearchResponse(
+        query=search.query,
+        filters=filters,
+        count=len(items),
+        items=tuple(CatalogItemResponse.model_validate(item) for item in items),
+    )
 
 
 @router.get("/top-10", response_model=TopTenResponse)

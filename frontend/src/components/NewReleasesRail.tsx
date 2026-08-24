@@ -12,7 +12,6 @@ export function NewReleasesRail({ scope, filters }: NewReleasesRailProps) {
     <CatalogRail
       id="new-releases-title"
       title="New Releases"
-      subtitle="Recently released movies and series"
       loadingLabel="Loading New Releases"
       emptyTitle="No recent releases match these filters."
       emptyHint="Try widening the year, genre, runtime, or rating filters."

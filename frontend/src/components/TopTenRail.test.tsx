@@ -52,7 +52,7 @@ test("renders ranked local catalog results and sends every active filter", async
 
   expect(screen.getByLabelText("Loading Top 10")).toBeInTheDocument();
   expect(await screen.findByRole("article", { name: /Number 1.*Spider-Man/ })).toBeInTheDocument();
-  expect(screen.getByText("Netflix")).toBeInTheDocument();
+  expect(screen.getByLabelText("Available on Netflix")).toBeInTheDocument();
   expect(screen.getByText("2021 · Movie · 148 min")).toBeInTheDocument();
   expect(screen.getByText("Action · Adventure")).toBeInTheDocument();
   expect(screen.getByText("A multiverse adventure.")).toBeInTheDocument();
@@ -63,6 +63,10 @@ test("renders ranked local catalog results and sends every active filter", async
   expect(screen.getByRole("link", { name: "Open Spider-Man: No Way Home on Netflix" })).toHaveAttribute(
     "href",
     "https://www.netflix.com/title/81727396",
+  );
+  expect(screen.getByRole("link", { name: "Open Spider-Man: No Way Home on Netflix" })).toHaveAttribute(
+    "data-tooltip",
+    "Watch on Netflix",
   );
   expect(String(fetchMock.mock.calls[0][0])).toContain(
     "region=GR&providers=netflix&content_type=movie&genre_ids=28&rating_min=7",

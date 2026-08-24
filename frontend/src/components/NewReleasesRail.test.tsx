@@ -55,8 +55,8 @@ test("renders unranked new releases and sends the shared filters", async () => {
   expect(await screen.findByRole("article", { name: "A New Release" })).toBeInTheDocument();
   expect(screen.queryByText("1")).not.toBeInTheDocument();
   expect(screen.getByLabelText("Disney+; direct link unavailable")).toHaveAttribute(
-    "title",
-    "Direct link unavailable",
+    "data-tooltip",
+    "Available on this provider, but a direct title link is unavailable.",
   );
   expect(String(fetchMock.mock.calls[0][0])).toContain(
     "new-releases?region=GR&providers=disney_plus&content_type=movie&genre_ids=18",

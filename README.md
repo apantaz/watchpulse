@@ -175,10 +175,22 @@ make frontend-dev
 ```
 
 Open `http://127.0.0.1:5173`. The v0.5 frontend reads API health, catalog
-freshness, reference filters, Top 10, New Releases, and Recently Added from
-FastAPI, proving the complete local serving path. The browser never calls either
-upstream data provider. See the
+freshness, reference filters, Top 10, New Releases, Recently Added, and Upcoming
+from FastAPI, proving the complete local serving path. The browser never calls
+either upstream data provider. See the
 [frontend guide](frontend/README.md) for configuration and quality commands.
+
+Lifecycle-only titles can be enriched incrementally with canonical TMDB
+metadata and current watch-provider evidence without repeating broad discovery:
+
+```bash
+python -m ingestion.enrich_streaming_metadata --event-type upcoming --country GR
+make dbt-publish
+```
+
+The command independently skips title IDs with retained metadata or provider
+responses and reports its bounded
+TMDB request count, and makes no Streaming Availability requests.
 
 ## Dependency management
 

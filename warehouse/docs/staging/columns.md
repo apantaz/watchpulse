@@ -2,6 +2,16 @@
 Canonical TMDB content identifier.
 {% enddocs %}
 
+{% docs col_episode_count %}
+Total number of aired episodes reported by TMDB for a TV series. This does not
+describe the episode count of an announced future season.
+{% enddocs %}
+
+{% docs col_season_count %}
+Total number of seasons reported by TMDB for a TV series. This is current title
+metadata and must not be interpreted as the number of an announced new season.
+{% enddocs %}
+
 {% docs col_content_type %}
 Internal content type: `movie` or `tv`.
 {% enddocs %}

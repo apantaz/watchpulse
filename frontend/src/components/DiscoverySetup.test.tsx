@@ -49,3 +49,22 @@ test("changing region reloads providers and removes an invalid selection", async
     localStorage.getItem("watchpulse.discovery-preferences.v1") ?? "{}",
   )).toMatchObject({ region: "US", providers: [] }));
 });
+
+test("selects and clears every region-supported provider", async () => {
+  vi.spyOn(globalThis, "fetch")
+    .mockImplementationOnce(() => jsonResponse({ regions: [{ code: "GR" }] }))
+    .mockImplementationOnce(() => jsonResponse({ region: "GR", providers: [
+      { key: "netflix", name: "Netflix" },
+      { key: "disney_plus", name: "Disney+" },
+    ] }));
+
+  render(<DiscoverySetup onScopeChange={vi.fn()} />);
+  await screen.findByRole("button", { name: /Netflix/ });
+  const selectAll = screen.getByRole("button", { name: "Select all" });
+  fireEvent.click(selectAll);
+
+  expect(screen.getByRole("button", { name: /Netflix/ })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: /Disney\+/ })).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
+  expect(screen.getByRole("button", { name: /Netflix/ })).toHaveAttribute("aria-pressed", "false");
+});

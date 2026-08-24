@@ -9,6 +9,7 @@ const IMAGE_BASE_URL = (
 type TitleCardProps = {
   item: CatalogItem;
   rank?: number;
+  lifecycleDate?: "available_since" | "available_from";
 };
 
 function safeWatchUrl(value: string | null): string | null {
@@ -21,7 +22,13 @@ function safeWatchUrl(value: string | null): string | null {
   }
 }
 
-export function TitleCard({ item, rank }: TitleCardProps) {
+const formatLifecycleDate = (value: string) => new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+}).format(new Date(value));
+
+export function TitleCard({ item, rank, lifecycleDate }: TitleCardProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const posterUrl = item.poster_path && !imageFailed
     ? `${IMAGE_BASE_URL}/${item.poster_path.replace(/^\//, "")}`
@@ -31,6 +38,27 @@ export function TitleCard({ item, rank }: TitleCardProps) {
   ).values()];
   const tmdbUrl = `https://www.themoviedb.org/${item.content_type === "tv" ? "tv" : "movie"}/${item.tmdb_id}`;
   const genreLabel = item.genre_names.slice(0, 2).join(" · ");
+  const hasRating = item.tmdb_rating !== null && item.tmdb_rating > 0;
+  const lifecycleDates = lifecycleDate
+    ? item.availabilities
+      .map((availability) => availability[lifecycleDate])
+      .filter((value): value is string => value !== null)
+      .sort()
+    : [];
+  const lifecycleValue = lifecycleDate === "available_since"
+    ? lifecycleDates.at(-1)
+    : lifecycleDates.at(0);
+  const hasCurrentAvailability = item.availabilities.some((availability) => availability.is_available);
+  const lifecycleLabel = lifecycleDate === "available_from"
+    ? item.content_type === "tv" && hasCurrentAvailability ? "New season coming" : "Coming"
+    : "Added";
+  const seriesDetails = item.content_type === "tv" && lifecycleDate !== "available_from"
+    ? [
+      item.season_count ? `${item.season_count} ${item.season_count === 1 ? "season" : "seasons"}` : null,
+      item.episode_count ? `${item.episode_count} ${item.episode_count === 1 ? "episode" : "episodes"}` : null,
+    ].filter(Boolean).join(" · ")
+    : null;
+  const formatDetail = seriesDetails || (item.runtime_minutes ? `${item.runtime_minutes} min` : null);
 
   return (
     <article className="title-card" aria-label={rank ? `Number ${rank}: ${item.title}` : item.title}>
@@ -54,25 +82,28 @@ export function TitleCard({ item, rank }: TitleCardProps) {
             <span>{item.overview}</span>
           </span>
         )}
-        {item.tmdb_rating !== null && <span className="rating">★ {item.tmdb_rating.toFixed(1)}</span>}
+        <span className={`rating${hasRating ? "" : " unrated"}`}>
+          {hasRating ? `★ ${item.tmdb_rating!.toFixed(1)}` : "N/A"}
+        </span>
       </a>
       <div className="card-copy">
         <h3>{item.title}</h3>
         <p>
-          {[item.release_year, item.content_type === "tv" ? "Series" : "Movie", item.runtime_minutes ? `${item.runtime_minutes} min` : null]
+          {[item.release_year, item.content_type === "tv" ? "Series" : "Movie", formatDetail]
             .filter(Boolean)
             .join(" · ")}
         </p>
         {genreLabel && <p className="card-genres">{genreLabel}</p>}
+        {lifecycleValue && (
+          <p className="lifecycle-date">
+            {lifecycleLabel} {formatLifecycleDate(lifecycleValue)}
+          </p>
+        )}
         <div className="provider-badges" aria-label={`Available on ${providers.map(({ provider_name }) => provider_name).join(", ")}`}>
-          {providers.slice(0, 2).map((availability) => {
+          {providers.map((availability) => {
             const watchUrl = safeWatchUrl(availability.watch_url);
             const contents = (
-              <>
-                <ProviderLogo providerKey={availability.provider_key} providerName={availability.provider_name} decorative />
-                {availability.provider_name}
-                {watchUrl && <span aria-hidden="true">↗</span>}
-              </>
+              <ProviderLogo providerKey={availability.provider_key} providerName={availability.provider_name} decorative />
             );
             return watchUrl ? (
               <a
@@ -81,6 +112,7 @@ export function TitleCard({ item, rank }: TitleCardProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Open ${item.title} on ${availability.provider_name}`}
+                data-tooltip={`Watch on ${availability.provider_name}`}
                 key={availability.provider_key}
               >
                 {contents}
@@ -88,15 +120,15 @@ export function TitleCard({ item, rank }: TitleCardProps) {
             ) : (
               <span
                 className="provider-badge unavailable"
-                title="Direct link unavailable"
+                data-tooltip="Available on this provider, but a direct title link is unavailable."
                 aria-label={`${availability.provider_name}; direct link unavailable`}
+                tabIndex={0}
                 key={availability.provider_key}
               >
                 {contents}
               </span>
             );
           })}
-          {providers.length > 2 && <span className="provider-more">+{providers.length - 2}</span>}
         </div>
       </div>
     </article>

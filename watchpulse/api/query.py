@@ -40,6 +40,7 @@ class DiscoveryRequest:
     expires_from: datetime | None = None
     expires_to: datetime | None = None
     tmdb_id: int | None = None
+    title_query: str | None = None
 
     def __post_init__(self) -> None:
         if not 1 <= self.limit <= 100:
@@ -48,6 +49,8 @@ class DiscoveryRequest:
             raise ValueError("offset must be zero or greater")
         if self.tmdb_id is not None and self.tmdb_id <= 0:
             raise ValueError("tmdb_id must be positive")
+        if self.title_query is not None and not 2 <= len(self.title_query.strip()) <= 100:
+            raise ValueError("title_query must contain between 2 and 100 characters")
         if (
             self.release_date_from is not None
             and self.release_date_to is not None
@@ -78,8 +81,8 @@ class DiscoveryQueryBuilder:
     """Build discovery SQL using only fixed fragments and bound values."""
 
     _availability_predicates = {
-        AvailabilityState.CURRENT: ("catalog.is_available = true and catalog.is_upcoming = false"),
-        AvailabilityState.UPCOMING: ("catalog.is_upcoming = true and catalog.is_available = false"),
+        AvailabilityState.CURRENT: "catalog.is_available = true",
+        AvailabilityState.UPCOMING: "catalog.is_upcoming = true",
         AvailabilityState.ANY: "true",
     }
     _sort_expressions = {
@@ -162,6 +165,13 @@ class DiscoveryQueryBuilder:
         if request.tmdb_id is not None:
             predicates.append("catalog.tmdb_id = ?")
             parameters.append(request.tmdb_id)
+        if request.title_query is not None:
+            predicates.append(
+                "(contains(lower(catalog.title), lower(?)) "
+                "or contains(lower(coalesce(catalog.original_title, '')), lower(?)))"
+            )
+            normalized_query = request.title_query.strip()
+            parameters.extend((normalized_query, normalized_query))
 
         parameters.extend((request.limit, request.offset))
         sql = f"""
@@ -204,7 +214,9 @@ class DiscoveryQueryBuilder:
                     )
                     order by catalog.provider_name, catalog.provider_key,
                              catalog.monetization_type
-                ) as availabilities
+                ) as availabilities,
+                catalog.episode_count,
+                catalog.season_count
             from main_marts.catalog_availability as catalog
             where {" and ".join(predicates)}
             group by
@@ -223,7 +235,9 @@ class DiscoveryQueryBuilder:
                 catalog.popularity_score,
                 catalog.poster_path,
                 catalog.backdrop_path,
-                catalog.metadata_source
+                catalog.metadata_source,
+                catalog.episode_count,
+                catalog.season_count
             order by {self._sort_expressions[request.sort]},
                      catalog.tmdb_id, catalog.content_type
             limit ? offset ?

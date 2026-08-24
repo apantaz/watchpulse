@@ -1,4 +1,4 @@
-with tmdb_candidates as (
+with tmdb_metadata_candidates as (
     select
         tmdb_id,
         content_type,
@@ -7,7 +7,9 @@ with tmdb_candidates as (
         overview,
         release_date,
         year(release_date)::integer as release_year,
-        cast(null as integer) as runtime_minutes,
+        runtime_minutes,
+        episode_count,
+        season_count,
         genre_ids,
         original_language,
         tmdb_rating,
@@ -19,6 +21,32 @@ with tmdb_candidates as (
         source_file,
         'tmdb' as metadata_source,
         1 as source_priority
+    from {{ ref('stg_tmdb_metadata') }}
+),
+
+tmdb_candidates as (
+    select
+        tmdb_id,
+        content_type,
+        title,
+        original_title,
+        overview,
+        release_date,
+        year(release_date)::integer as release_year,
+        cast(null as integer) as runtime_minutes,
+        cast(null as integer) as episode_count,
+        cast(null as integer) as season_count,
+        genre_ids,
+        original_language,
+        tmdb_rating,
+        vote_count,
+        tmdb_popularity,
+        poster_path,
+        backdrop_path,
+        source_updated_at,
+        source_file,
+        'tmdb' as metadata_source,
+        2 as source_priority
     from {{ ref('stg_tmdb_discovery') }}
 ),
 
@@ -32,6 +60,8 @@ streaming_candidates as (
         cast(null as date) as release_date,
         release_year,
         runtime_minutes,
+        cast(null as integer) as episode_count,
+        cast(null as integer) as season_count,
         cast(null as json) as genre_ids,
         cast(null as varchar) as original_language,
         cast(null as double) as tmdb_rating,
@@ -42,11 +72,13 @@ streaming_candidates as (
         source_updated_at,
         source_file,
         'streaming_availability' as metadata_source,
-        2 as source_priority
+        3 as source_priority
     from {{ ref('stg_streaming_shows') }}
 ),
 
 candidates as (
+    select * from tmdb_metadata_candidates
+    union all
     select * from tmdb_candidates
     union all
     select * from streaming_candidates
@@ -77,6 +109,8 @@ select
     release_date,
     release_year,
     runtime_minutes,
+    episode_count,
+    season_count,
     genre_ids,
     original_language,
     tmdb_rating,

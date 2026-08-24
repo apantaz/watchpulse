@@ -335,6 +335,24 @@ frontend renders an external link only for validated HTTPS values, opens it in
 a separate tab with safe relationship attributes, and leaves other provider
 badges informational.
 
+## ADR-020: Incrementally enrich lifecycle-only titles from TMDB
+
+Status: Accepted (2026-08-24)
+
+Streaming lifecycle events can introduce upcoming or newly added TMDB IDs that
+are absent from the current provider discovery snapshot. Embedded lifecycle
+metadata may omit descriptions and does not provide TMDB poster paths.
+
+WatchPulse extracts the stable TMDB ID from retained lifecycle data and fetches
+metadata plus current watch-provider evidence in a separate bounded ingestion
+command. Raw responses are stored locally. `stg_tmdb_metadata` takes precedence
+over broad discovery and streaming metadata fallbacks, while targeted provider
+evidence reconciles current availability with lifecycle announcements. An
+already-available series may therefore be both current and upcoming; the UI
+labels this as a new season without claiming a season number absent upstream.
+Browser requests never trigger enrichment, and each retained response type is
+skipped independently on subsequent runs.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

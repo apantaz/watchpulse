@@ -112,6 +112,8 @@ class CatalogItemResponse(BaseModel):
     metadata_source: str
     last_updated_at: datetime
     availabilities: tuple[AvailabilityResponse, ...]
+    episode_count: int | None = None
+    season_count: int | None = None
 
 
 class RankedCatalogItemResponse(CatalogItemResponse):
@@ -162,3 +164,10 @@ class LeavingSoonResponse(BaseModel):
 
 class TitleDetailsResponse(CatalogItemResponse):
     region: str
+
+
+class TitleSearchResponse(BaseModel):
+    query: str
+    filters: DiscoveryFilters
+    count: int
+    items: tuple[CatalogItemResponse, ...]

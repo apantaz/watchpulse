@@ -20,11 +20,11 @@ select
     upcoming.region,
     upcoming.provider_key,
     upcoming.monetization_type,
-    cast(null as timestamptz) as available_since,
+    current.available_since,
     upcoming.event_effective_at as available_from,
     cast(null as timestamptz) as expires_on,
     upcoming.watch_url,
-    false as is_available,
+    current.tmdb_id is not null as is_available,
     true as is_upcoming,
     upcoming.source,
     upcoming.ingested_at as last_updated_at
@@ -36,7 +36,6 @@ left join current_availability as current
     and upcoming.provider_key = current.provider_key
     and upcoming.monetization_type = current.monetization_type
 where upcoming.announcement_rank = 1
-    and current.tmdb_id is null
     and (
         upcoming.event_effective_at is null
         or upcoming.event_effective_at > current_timestamp

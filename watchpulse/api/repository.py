@@ -88,6 +88,8 @@ class CatalogItem:
     metadata_source: str
     last_updated_at: datetime
     availabilities: tuple[CatalogAvailability, ...]
+    episode_count: int | None = None
+    season_count: int | None = None
 
 
 class CatalogRepository:
@@ -227,6 +229,8 @@ class CatalogRepository:
             metadata_source=row[16],
             last_updated_at=row[17],
             availabilities=availabilities,
+            episode_count=row[19],
+            season_count=row[20],
         )
 
     @staticmethod

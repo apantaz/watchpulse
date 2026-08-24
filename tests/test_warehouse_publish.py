@@ -62,6 +62,15 @@ def test_publish_replaces_output_only_after_validation(tmp_path: Path) -> None:
         ).fetchone() == (2,)
 
 
+def test_validation_allows_current_titles_with_upcoming_seasons(tmp_path: Path) -> None:
+    candidate_path = tmp_path / "dual-state.duckdb"
+    _create_candidate(candidate_path)
+    with duckdb.connect(str(candidate_path)) as connection:
+        connection.execute("update main_marts.catalog_freshness set upcoming_row_count = 1")
+
+    validate_candidate(candidate_path)
+
+
 def test_failed_build_preserves_previous_output(tmp_path: Path) -> None:
     project_dir = tmp_path / "warehouse"
     project_dir.mkdir()

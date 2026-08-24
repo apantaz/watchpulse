@@ -52,6 +52,8 @@ export type CatalogItem = {
   release_date: string | null;
   release_year: number | null;
   runtime_minutes: number | null;
+  episode_count?: number | null;
+  season_count?: number | null;
   original_language: string | null;
   genre_ids: number[];
   genre_names: string[];
@@ -157,6 +159,33 @@ export async function getRecentlyAdded(
 ): Promise<CatalogItem[]> {
   const response = await getJson<{ items: CatalogItem[] }>(
     `/api/v1/discovery/recently-added?${discoveryParams(scope, filters)}`,
+    signal,
+  );
+  return response.items;
+}
+
+export async function getUpcoming(
+  scope: CatalogScope,
+  filters: GlobalFilters,
+  signal?: AbortSignal,
+): Promise<CatalogItem[]> {
+  const response = await getJson<{ items: CatalogItem[] }>(
+    `/api/v1/discovery/upcoming?${discoveryParams(scope, filters)}`,
+    signal,
+  );
+  return response.items;
+}
+
+export async function searchTitles(
+  query: string,
+  scope: CatalogScope,
+  filters: GlobalFilters,
+  signal?: AbortSignal,
+): Promise<CatalogItem[]> {
+  const params = discoveryParams(scope, filters);
+  params.set("query", query);
+  const response = await getJson<{ items: CatalogItem[] }>(
+    `/api/v1/discovery/search?${params}`,
     signal,
   );
   return response.items;

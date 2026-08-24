@@ -5,6 +5,8 @@ import { GlobalFilters } from "./components/GlobalFilters";
 import { NewReleasesRail } from "./components/NewReleasesRail";
 import { RecentlyAddedRail } from "./components/RecentlyAddedRail";
 import { TopTenRail } from "./components/TopTenRail";
+import { TitleSearch } from "./components/TitleSearch";
+import { UpcomingRail } from "./components/UpcomingRail";
 import { type CatalogScope, type GlobalFilters as FilterValue } from "./discovery";
 import { loadPreferences } from "./preferences";
 import "./styles.css";
@@ -14,10 +16,14 @@ type LoadState =
   | { kind: "ready"; status: CatalogStatus }
   | { kind: "error"; message: string };
 
-const formatRefresh = (value: string) =>
-  new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(value),
-  );
+const formatRefresh = (value: string) => {
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const timeZone = formatter.resolvedOptions().timeZone || "UTC";
+  return `${formatter.format(new Date(value))} (${timeZone})`;
+};
 
 export default function App() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
@@ -58,26 +64,52 @@ export default function App() {
           <span className="freshness"><span className="status-dot" />Updated {formatRefresh(state.status.freshness.latest_source_updated_at)}</span>
         ) : <span className="version">v0.5 preview</span>}
       </nav>
-      <section className="hero">
-        <p className="eyebrow">YOUR STREAMS. ONE DECISION.</p>
-        <h1>Find your next <span>great watch.</span></h1>
-        <p className="intro">WatchPulse searches the catalog available on your services and in your region—without the endless scroll.</p>
-      </section>
-      {state.kind === "loading" && <p className="catalog-notice" aria-live="polite">Connecting to WatchPulse…</p>}
-      {state.kind === "error" && <p className="catalog-notice error" role="alert">{state.message}</p>}
-      {state.kind === "ready" && <DiscoverySetup onScopeChange={handleScopeChange} />}
-      {scope && scope.providers.length > 0 && (
-        <>
-          <GlobalFilters scope={scope} value={filters} onChange={setFilters} />
-          <TopTenRail scope={scope} filters={filters} />
-          <NewReleasesRail scope={scope} filters={filters} />
-          <RecentlyAddedRail scope={scope} filters={filters} />
-        </>
-      )}
-      {scope && scope.providers.length === 0 && (
-        <p className="selection-prompt">Select at least one streaming service to refine your catalog.</p>
-      )}
-      <p className="coming-next">Upcoming and Leaving Soon arrive next.</p>
+      <div className="app-layout">
+        <aside className="discovery-sidebar" aria-label="Discovery controls">
+          {state.kind === "loading" && <p className="catalog-notice" aria-live="polite">Connecting to WatchPulse…</p>}
+          {state.kind === "error" && <p className="catalog-notice error" role="alert">{state.message}</p>}
+          {state.kind === "ready" && <DiscoverySetup onScopeChange={handleScopeChange} />}
+          {scope && scope.providers.length > 0 && (
+            <GlobalFilters scope={scope} value={filters} onChange={setFilters} />
+          )}
+        </aside>
+
+        <div className="content-workspace">
+          <section className="hero">
+            <p className="eyebrow">YOUR STREAM. ONE DECISION.</p>
+            <h1>Find your next <span>great watch.</span></h1>
+            <p className="intro">WatchPulse searches the catalog available on your services and in your region—without the endless scroll.</p>
+          </section>
+          {scope && scope.providers.length > 0 && (
+            <>
+              <TitleSearch scope={scope} filters={filters} />
+              <TopTenRail scope={scope} filters={filters} />
+              <NewReleasesRail scope={scope} filters={filters} />
+              <RecentlyAddedRail scope={scope} filters={filters} />
+              <UpcomingRail scope={scope} filters={filters} />
+            </>
+          )}
+          {scope && scope.providers.length === 0 && (
+            <p className="selection-prompt">Select at least one streaming service to start discovering titles.</p>
+          )}
+          <p className="coming-next">Leaving Soon and title details arrive next.</p>
+        </div>
+      </div>
+      <footer className="credits" aria-label="Credits">
+        <a
+          className="tmdb-credit"
+          href="https://www.themoviedb.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Visit The Movie Database"
+        >
+          <img src="/tmdb-logo.svg" alt="The Movie Database (TMDB)" />
+        </a>
+        <div>
+          <p>This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
+          <p>Streaming availability data provided in part by <a href="https://www.justwatch.com" target="_blank" rel="noopener noreferrer">JustWatch</a>.</p>
+        </div>
+      </footer>
     </main>
   );
 }

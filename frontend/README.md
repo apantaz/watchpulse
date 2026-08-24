@@ -44,6 +44,12 @@ state and the same query-parameter contract as every FastAPI discovery section.
 The Top 10, New Releases, and Recently Added rails query only FastAPI and render
 reusable poster cards; ranking badges remain specific to Top 10. Recently Added
 uses provider addition time and remains distinct from content release recency.
+Upcoming uses future provider arrival evidence and displays the expected date.
+An already-available series may also appear there as a new-season announcement.
+On desktop, region, provider, and global controls remain in a sticky sidebar
+while discovery rails use the wider content workspace. The layout stacks for
+touch and narrow screens, and every control still updates local API queries
+immediately without an Apply action.
 Poster artwork is loaded from TMDB's public image CDN using the ingested
 `poster_path`; this is an image asset request, not a TMDB API lookup, and it
 uses no API key or discovery quota. Missing or failed images have a local

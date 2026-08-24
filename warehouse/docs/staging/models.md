@@ -58,3 +58,11 @@ source. Source ratings and signed image URLs are intentionally excluded.
 Grain: one row per `tmdb_id + content_type`.
 
 {% enddocs %}
+{% docs stg_tmdb_metadata %}
+Canonical per-title TMDB metadata retained by targeted enrichment. This model
+supplies poster artwork, descriptions, runtime, genres, ratings, and release
+details for lifecycle titles that may not appear in provider discovery pages.
+{% enddocs %}
+{% docs stg_tmdb_watch_providers %}
+Canonical subscription availability extracted from targeted TMDB watch-provider responses for lifecycle titles. It provides current-state evidence without placing TMDB in the user request path.
+{% enddocs %}

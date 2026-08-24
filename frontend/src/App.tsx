@@ -3,6 +3,7 @@ import { type CatalogStatus, getCatalogStatus } from "./api/catalog";
 import { DiscoverySetup } from "./components/DiscoverySetup";
 import { GlobalFilters } from "./components/GlobalFilters";
 import { NewReleasesRail } from "./components/NewReleasesRail";
+import { RecentlyAddedRail } from "./components/RecentlyAddedRail";
 import { TopTenRail } from "./components/TopTenRail";
 import { type CatalogScope, type GlobalFilters as FilterValue } from "./discovery";
 import { loadPreferences } from "./preferences";
@@ -70,12 +71,13 @@ export default function App() {
           <GlobalFilters scope={scope} value={filters} onChange={setFilters} />
           <TopTenRail scope={scope} filters={filters} />
           <NewReleasesRail scope={scope} filters={filters} />
+          <RecentlyAddedRail scope={scope} filters={filters} />
         </>
       )}
       {scope && scope.providers.length === 0 && (
         <p className="selection-prompt">Select at least one streaming service to refine your catalog.</p>
       )}
-      <p className="coming-next">Recently Added, Upcoming, and Leaving Soon arrive next.</p>
+      <p className="coming-next">Upcoming and Leaving Soon arrive next.</p>
     </main>
   );
 }

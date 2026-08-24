@@ -5,6 +5,7 @@ import { GlobalFilters } from "./components/GlobalFilters";
 import { NewReleasesRail } from "./components/NewReleasesRail";
 import { RecentlyAddedRail } from "./components/RecentlyAddedRail";
 import { TopTenRail } from "./components/TopTenRail";
+import { TitleSearch } from "./components/TitleSearch";
 import { UpcomingRail } from "./components/UpcomingRail";
 import { type CatalogScope, type GlobalFilters as FilterValue } from "./discovery";
 import { loadPreferences } from "./preferences";
@@ -15,10 +16,14 @@ type LoadState =
   | { kind: "ready"; status: CatalogStatus }
   | { kind: "error"; message: string };
 
-const formatRefresh = (value: string) =>
-  new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(value),
-  );
+const formatRefresh = (value: string) => {
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const timeZone = formatter.resolvedOptions().timeZone || "UTC";
+  return `${formatter.format(new Date(value))} (${timeZone})`;
+};
 
 export default function App() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
@@ -77,6 +82,7 @@ export default function App() {
           </section>
           {scope && scope.providers.length > 0 && (
             <>
+              <TitleSearch scope={scope} filters={filters} />
               <TopTenRail scope={scope} filters={filters} />
               <NewReleasesRail scope={scope} filters={filters} />
               <RecentlyAddedRail scope={scope} filters={filters} />
@@ -89,6 +95,21 @@ export default function App() {
           <p className="coming-next">Leaving Soon and title details arrive next.</p>
         </div>
       </div>
+      <footer className="credits" aria-label="Credits">
+        <a
+          className="tmdb-credit"
+          href="https://www.themoviedb.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Visit The Movie Database"
+        >
+          <img src="/tmdb-logo.svg" alt="The Movie Database (TMDB)" />
+        </a>
+        <div>
+          <p>This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
+          <p>Streaming availability data provided in part by <a href="https://www.justwatch.com" target="_blank" rel="noopener noreferrer">JustWatch</a>.</p>
+        </div>
+      </footer>
     </main>
   );
 }

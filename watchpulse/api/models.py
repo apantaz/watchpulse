@@ -164,3 +164,10 @@ class LeavingSoonResponse(BaseModel):
 
 class TitleDetailsResponse(CatalogItemResponse):
     region: str
+
+
+class TitleSearchResponse(BaseModel):
+    query: str
+    filters: DiscoveryFilters
+    count: int
+    items: tuple[CatalogItemResponse, ...]

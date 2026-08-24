@@ -253,6 +253,35 @@ def test_region_and_provider_never_leak_across_http_routes(catalog_app: FastAPI)
     assert [item["tmdb_id"] for item in greek_disney.json()["items"]] == [5]
 
 
+def test_title_search_uses_local_scoped_catalog(catalog_app: FastAPI) -> None:
+    response = _get(
+        catalog_app,
+        "/api/v1/discovery/search",
+        [("query", "Title 1"), ("region", "GR"), ("providers", "netflix")],
+    )
+    other_region = _get(
+        catalog_app,
+        "/api/v1/discovery/search",
+        [("query", "Title 1"), ("region", "US"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["query"] == "Title 1"
+    assert [item["tmdb_id"] for item in response.json()["items"]] == [1]
+    assert other_region.json()["items"] == []
+
+
+def test_title_search_treats_sql_wildcards_as_text(catalog_app: FastAPI) -> None:
+    response = _get(
+        catalog_app,
+        "/api/v1/discovery/search",
+        [("query", "%_"), ("region", "GR"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["items"] == []
+
+
 def test_api_exposes_verified_watch_urls_with_scoped_availability(
     catalog_app: FastAPI,
 ) -> None:
@@ -324,6 +353,7 @@ def test_openapi_contains_the_complete_v04_contract(catalog_app: FastAPI) -> Non
         "/api/v1/catalog/genres",
         "/api/v1/catalog/filter-options",
         "/api/v1/discovery/top-10",
+        "/api/v1/discovery/search",
         "/api/v1/discovery/new-releases",
         "/api/v1/discovery/recently-added",
         "/api/v1/discovery/upcoming",

@@ -23,8 +23,15 @@ test("shows catalog readiness returned by the local API", async () => {
 
   render(<App />);
   expect(screen.getByText("Connecting to WatchPulse…")).toBeInTheDocument();
-  expect(await screen.findByText(/Updated/)).toBeInTheDocument();
+  const timeZone = new Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  expect(await screen.findByText(/Updated/)).toHaveTextContent(`(${timeZone})`);
   expect(await screen.findByRole("button", { name: /Netflix/ })).toBeInTheDocument();
+  expect(screen.getByRole("img", { name: "The Movie Database (TMDB)" })).toBeInTheDocument();
+  expect(screen.getByText(/uses TMDB and the TMDB APIs/)).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "JustWatch" })).toHaveAttribute(
+    "href",
+    "https://www.justwatch.com",
+  );
 });
 
 test("shows an honest error when the catalog is unavailable", async () => {

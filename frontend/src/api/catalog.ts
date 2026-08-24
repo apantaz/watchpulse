@@ -175,3 +175,18 @@ export async function getUpcoming(
   );
   return response.items;
 }
+
+export async function searchTitles(
+  query: string,
+  scope: CatalogScope,
+  filters: GlobalFilters,
+  signal?: AbortSignal,
+): Promise<CatalogItem[]> {
+  const params = discoveryParams(scope, filters);
+  params.set("query", query);
+  const response = await getJson<{ items: CatalogItem[] }>(
+    `/api/v1/discovery/search?${params}`,
+    signal,
+  );
+  return response.items;
+}

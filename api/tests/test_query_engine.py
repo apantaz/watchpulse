@@ -351,6 +351,22 @@ def test_internal_release_date_window_is_inclusive(tmp_path: Path) -> None:
     assert [item.tmdb_id for item in items] == [1]
 
 
+def test_new_releases_ranks_eligible_titles_by_popularity_before_release_date(
+    tmp_path: Path,
+) -> None:
+    filters = DiscoveryFilters(region="GR", providers=("netflix",))
+    request = DiscoveryRequest(
+        filters,
+        sort=DiscoverySort.NEW_RELEASES,
+        release_date_from=date(2020, 1, 1),
+        release_date_to=date(2024, 1, 1),
+    )
+
+    items = _repository(tmp_path).discover(request)
+
+    assert [item.tmdb_id for item in items] == [2, 1]
+
+
 def test_internal_available_since_window_is_inclusive(tmp_path: Path) -> None:
     filters = DiscoveryFilters(region="GR", providers=("netflix",))
     request = DiscoveryRequest(

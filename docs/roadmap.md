@@ -170,6 +170,9 @@ The fourth increment shifts the interface toward content-first discovery with
 a compact freshness treatment, reusable ranked title cards, TMDB poster
 rendering with local visual fallbacks, and the real filter-reactive Top 10 rail.
 Section loading, empty, failure, and retry behavior is explicit.
+The fifth increment adds the filter-reactive New Releases rail using content
+release dates, reuses the cinematic cards without ranking badges, and preserves
+independent loading, empty, failure, and retry behavior.
 Verified provider deep links are retained from historical lifecycle payloads
 and exposed as optional safe card actions; TMDB-only rows remain unlinked
 rather than receiving guessed destinations.

@@ -174,9 +174,10 @@ make frontend-install
 make frontend-dev
 ```
 
-Open `http://127.0.0.1:5173`. The v0.5 application shell reads API health and
-catalog freshness from FastAPI, proving the complete local serving path. The
-browser never calls either upstream data provider. See the
+Open `http://127.0.0.1:5173`. The v0.5 frontend reads API health, catalog
+freshness, reference filters, Top 10, and New Releases from FastAPI, proving the
+complete local serving path. The browser never calls either upstream data
+provider. See the
 [frontend guide](frontend/README.md) for configuration and quality commands.
 
 ## Dependency management

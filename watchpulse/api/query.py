@@ -19,6 +19,7 @@ class AvailabilityState(str, Enum):
 class DiscoverySort(str, Enum):
     POPULARITY = "popularity"
     RELEASE_DATE = "release_date"
+    NEW_RELEASES = "new_releases"
     RECENTLY_ADDED = "recently_added"
     AVAILABLE_FROM = "available_from"
     EXPIRATION = "expiration"
@@ -84,6 +85,12 @@ class DiscoveryQueryBuilder:
     _sort_expressions = {
         DiscoverySort.POPULARITY: "catalog.popularity_score desc nulls last",
         DiscoverySort.RELEASE_DATE: "catalog.release_date desc nulls last",
+        DiscoverySort.NEW_RELEASES: (
+            "catalog.popularity_score desc nulls last, "
+            "catalog.tmdb_rating desc nulls last, "
+            "catalog.vote_count desc nulls last, "
+            "catalog.release_date desc nulls last"
+        ),
         DiscoverySort.RECENTLY_ADDED: "max(catalog.available_since) desc nulls last",
         DiscoverySort.AVAILABLE_FROM: "min(catalog.available_from) asc nulls last",
         DiscoverySort.EXPIRATION: "min(catalog.expires_on) asc nulls last",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { RankedCatalogItem } from "../api/catalog";
+import type { CatalogItem } from "../api/catalog";
 import { ProviderLogo } from "./ProviderLogo";
 
 const IMAGE_BASE_URL = (
@@ -7,7 +7,8 @@ const IMAGE_BASE_URL = (
 ).replace(/\/$/, "");
 
 type TitleCardProps = {
-  item: RankedCatalogItem;
+  item: CatalogItem;
+  rank?: number;
 };
 
 function safeWatchUrl(value: string | null): string | null {
@@ -20,7 +21,7 @@ function safeWatchUrl(value: string | null): string | null {
   }
 }
 
-export function TitleCard({ item }: TitleCardProps) {
+export function TitleCard({ item, rank }: TitleCardProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const posterUrl = item.poster_path && !imageFailed
     ? `${IMAGE_BASE_URL}/${item.poster_path.replace(/^\//, "")}`
@@ -32,8 +33,8 @@ export function TitleCard({ item }: TitleCardProps) {
   const genreLabel = item.genre_names.slice(0, 2).join(" · ");
 
   return (
-    <article className="title-card" aria-label={`Number ${item.rank}: ${item.title}`}>
-      <span className="rank" aria-hidden="true">{item.rank}</span>
+    <article className="title-card" aria-label={rank ? `Number ${rank}: ${item.title}` : item.title}>
+      {rank && <span className="rank" aria-hidden="true">{rank}</span>}
       <a
         className="poster-frame"
         href={tmdbUrl}

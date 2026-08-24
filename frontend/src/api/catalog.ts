@@ -137,3 +137,15 @@ export async function getTopTen(
   );
   return response.items;
 }
+
+export async function getNewReleases(
+  scope: CatalogScope,
+  filters: GlobalFilters,
+  signal?: AbortSignal,
+): Promise<CatalogItem[]> {
+  const response = await getJson<{ items: CatalogItem[] }>(
+    `/api/v1/discovery/new-releases?${discoveryParams(scope, filters)}`,
+    signal,
+  );
+  return response.items;
+}

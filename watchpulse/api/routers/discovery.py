@@ -63,7 +63,7 @@ async def new_releases(request: Request, filters: DiscoveryFiltersQuery) -> NewR
     query = DiscoveryRequest(
         filters=filters,
         availability=AvailabilityState.CURRENT,
-        sort=DiscoverySort.RELEASE_DATE,
+        sort=DiscoverySort.NEW_RELEASES,
         limit=20,
         release_date_from=as_of - timedelta(days=window_days),
         release_date_to=as_of,

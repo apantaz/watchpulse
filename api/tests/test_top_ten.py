@@ -165,7 +165,7 @@ def test_new_releases_uses_content_release_window_not_provider_date() -> None:
     assert response.status_code == 200
     assert repository.request is not None
     assert repository.request.availability is AvailabilityState.CURRENT
-    assert repository.request.sort is DiscoverySort.RELEASE_DATE
+    assert repository.request.sort is DiscoverySort.NEW_RELEASES
     assert repository.request.limit == 20
     assert repository.request.release_date_to == date.today()
     assert repository.request.release_date_from == date.today() - timedelta(days=30)

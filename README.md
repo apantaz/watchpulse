@@ -312,6 +312,32 @@ only be used for a bounded set while the incremental enrichment queue is built:
 python -m ingestion.run --max-pages 1 --enrich
 ```
 
+Plan the dedicated catalog enrichment locally before making any TMDB requests:
+
+```bash
+python -m ingestion.enrich_catalog --mode incremental --dry-run
+```
+
+The initial broad backfill selects titles that have never retained metadata or
+provider payloads. Set an explicit cap appropriate for the catalog size:
+
+```bash
+python -m ingestion.enrich_catalog --mode backfill --max-titles 10000 --dry-run
+python -m ingestion.enrich_catalog --mode backfill --max-titles 10000
+```
+
+Afterward, routine incremental runs deduplicate titles, prioritize product
+value, and refresh only new or stale payloads:
+
+```bash
+python -m ingestion.enrich_catalog --mode incremental
+```
+
+Add `--metadata-only` to skip watch-provider payloads. Add
+`--plan-output data/enrichment-plan.json` to save the complete local plan for
+inspection. Planning never calls TMDB; only execution does. Completed batches
+are retained as immutable Parquet files, allowing later plans to resume.
+
 To override the configured regions for one run, repeat `--country`:
 
 ```bash

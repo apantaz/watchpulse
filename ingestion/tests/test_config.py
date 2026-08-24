@@ -13,6 +13,8 @@ def test_settings_load_product_defaults() -> None:
     assert settings.lake_root == Path("data/lake")
     assert settings.new_release_days == 90
     assert settings.streaming_availability_max_requests_per_run == 2
+    assert settings.tmdb_enrichment_max_titles_per_run == 250
+    assert settings.tmdb_enrichment_movie_refresh_days == 180
 
 
 def test_default_region_must_be_supported() -> None:

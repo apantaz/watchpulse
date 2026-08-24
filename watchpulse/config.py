@@ -44,6 +44,12 @@ class Settings:
     new_release_days: int
     recently_added_days: int
     leaving_soon_days: int
+    tmdb_enrichment_max_titles_per_run: int
+    tmdb_enrichment_upcoming_refresh_days: int
+    tmdb_enrichment_recent_refresh_days: int
+    tmdb_enrichment_series_refresh_days: int
+    tmdb_enrichment_movie_refresh_days: int
+    tmdb_enrichment_provider_refresh_days: int
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
@@ -89,6 +95,24 @@ class Settings:
             new_release_days=_positive_int(values, "NEW_RELEASE_DAYS", 90),
             recently_added_days=_positive_int(values, "RECENTLY_ADDED_DAYS", 30),
             leaving_soon_days=_positive_int(values, "LEAVING_SOON_DAYS", 30),
+            tmdb_enrichment_max_titles_per_run=_positive_int(
+                values, "TMDB_ENRICHMENT_MAX_TITLES_PER_RUN", 250
+            ),
+            tmdb_enrichment_upcoming_refresh_days=_positive_int(
+                values, "TMDB_ENRICHMENT_UPCOMING_REFRESH_DAYS", 7
+            ),
+            tmdb_enrichment_recent_refresh_days=_positive_int(
+                values, "TMDB_ENRICHMENT_RECENT_REFRESH_DAYS", 30
+            ),
+            tmdb_enrichment_series_refresh_days=_positive_int(
+                values, "TMDB_ENRICHMENT_SERIES_REFRESH_DAYS", 90
+            ),
+            tmdb_enrichment_movie_refresh_days=_positive_int(
+                values, "TMDB_ENRICHMENT_MOVIE_REFRESH_DAYS", 180
+            ),
+            tmdb_enrichment_provider_refresh_days=_positive_int(
+                values, "TMDB_ENRICHMENT_PROVIDER_REFRESH_DAYS", 60
+            ),
         )
 
 

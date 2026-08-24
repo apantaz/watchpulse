@@ -257,6 +257,12 @@ filters are applied. It must never claim to be an official provider Top 10.
 - Broad TMDB catalog backfills are discovery-only and reuse the metadata already
   present in discovery responses.
 - Incremental jobs enrich only new, changed, or prioritized TMDB titles.
+- Catalog enrichment has two explicit modes. One-time `backfill` selects titles
+  with no retained metadata/provider payload. Routine `incremental` mode uses
+  configurable freshness windows and a per-run title cap, deduplicates
+  `(tmdb_id, content_type)` across regions and providers, and prioritizes
+  upcoming, recently added, recently released, Top 10, incomplete, and popular
+  titles. Planning reads only WatchPulse-owned data and supports dry runs.
 - Periodic reconciliation corrects missed upstream lifecycle changes.
 - HTTP clients use timeouts, conservative throttling, capped retries, and
   exponential backoff for transport errors, rate limits, and server errors.

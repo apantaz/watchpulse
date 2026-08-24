@@ -87,6 +87,7 @@ class AvailabilityResponse(BaseModel):
     is_available: bool
     is_upcoming: bool
     source: str
+    watch_url: str | None = None
 
 
 class CatalogItemResponse(BaseModel):
@@ -102,6 +103,7 @@ class CatalogItemResponse(BaseModel):
     runtime_minutes: int | None
     original_language: str | None
     genre_ids: tuple[int, ...]
+    genre_names: tuple[str, ...]
     tmdb_rating: float | None
     vote_count: int | None
     popularity_score: float | None

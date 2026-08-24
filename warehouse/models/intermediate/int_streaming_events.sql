@@ -15,5 +15,6 @@ select
     end as event_effective_at,
     source,
     source_event_id,
-    ingested_at
+    ingested_at,
+    watch_url
 from {{ ref('stg_streaming_events') }}

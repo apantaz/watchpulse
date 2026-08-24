@@ -64,6 +64,7 @@ class CatalogAvailability:
     is_available: bool
     is_upcoming: bool
     source: str
+    watch_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -78,6 +79,7 @@ class CatalogItem:
     runtime_minutes: int | None
     original_language: str | None
     genre_ids: tuple[int, ...]
+    genre_names: tuple[str, ...]
     tmdb_rating: float | None
     vote_count: int | None
     popularity_score: float | None
@@ -204,7 +206,7 @@ class CatalogRepository:
     @staticmethod
     def _catalog_item(row: tuple[Any, ...]) -> CatalogItem:
         raw_genres = json.loads(row[9]) if row[9] is not None else []
-        availabilities = tuple(CatalogAvailability(**availability) for availability in row[17])
+        availabilities = tuple(CatalogAvailability(**availability) for availability in row[18])
         return CatalogItem(
             tmdb_id=row[0],
             content_type=row[1],
@@ -216,13 +218,14 @@ class CatalogRepository:
             runtime_minutes=row[7],
             original_language=row[8],
             genre_ids=tuple(int(genre_id) for genre_id in raw_genres),
-            tmdb_rating=row[10],
-            vote_count=row[11],
-            popularity_score=row[12],
-            poster_path=row[13],
-            backdrop_path=row[14],
-            metadata_source=row[15],
-            last_updated_at=row[16],
+            genre_names=tuple(row[10]),
+            tmdb_rating=row[11],
+            vote_count=row[12],
+            popularity_score=row[13],
+            poster_path=row[14],
+            backdrop_path=row[15],
+            metadata_source=row[16],
+            last_updated_at=row[17],
             availabilities=availabilities,
         )
 

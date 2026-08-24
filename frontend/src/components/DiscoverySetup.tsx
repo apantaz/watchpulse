@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getProviders, getRegions, type ProviderOption } from "../api/catalog";
 import { loadPreferences, savePreferences } from "../preferences";
 import type { CatalogScope } from "../discovery";
+import { ProviderLogo } from "./ProviderLogo";
 
 type SetupState =
   | { kind: "loading-regions" }
@@ -112,7 +113,9 @@ export function DiscoverySetup({ onScopeChange }: DiscoverySetupProps) {
                     key={provider.key}
                     onClick={() => toggleProvider(provider.key)}
                   >
-                    <span className="provider-mark">{provider.name.slice(0, 1)}</span>
+                    <span className="provider-mark">
+                      <ProviderLogo providerKey={provider.key} providerName={provider.name} decorative />
+                    </span>
                     {provider.name}
                     <span className="check" aria-hidden="true">{selected ? "✓" : "+"}</span>
                   </button>

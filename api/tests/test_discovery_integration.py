@@ -73,6 +73,7 @@ def _catalog_row(
         "tmdb" if is_available else "streaming_availability",
         "tmdb_discovery" if is_available else "streaming_availability",
         datetime.now(UTC),
+        "https://www.netflix.com/title/example" if provider_key == "netflix" else None,
     )
 
 
@@ -94,7 +95,8 @@ def _create_catalog(path: Path) -> None:
                 available_from timestamptz, expires_on timestamptz,
                 is_available boolean, is_upcoming boolean, poster_path varchar,
                 backdrop_path varchar, metadata_source varchar,
-                availability_source varchar, last_updated_at timestamptz
+                availability_source varchar, last_updated_at timestamptz,
+                watch_url varchar
             )
             """
         )
@@ -247,6 +249,21 @@ def test_region_and_provider_never_leak_across_http_routes(catalog_app: FastAPI)
     assert {item["tmdb_id"] for item in greek_netflix.json()["items"]} == {1, 2}
     assert [item["tmdb_id"] for item in american_netflix.json()["items"]] == [4]
     assert [item["tmdb_id"] for item in greek_disney.json()["items"]] == [5]
+
+
+def test_api_exposes_verified_watch_urls_with_scoped_availability(
+    catalog_app: FastAPI,
+) -> None:
+    response = _get(
+        catalog_app,
+        "/api/v1/discovery/top-10",
+        [("region", "GR"), ("providers", "netflix")],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["availabilities"][0]["watch_url"] == (
+        "https://www.netflix.com/title/example"
+    )
 
 
 def test_frontend_like_requests_make_zero_network_connections(

@@ -102,6 +102,17 @@ Announced future availability timestamp for an upcoming event.
 Announced expiration timestamp for an expiring event.
 {% enddocs %}
 
+{% docs col_watch_url %}
+Verified HTTPS deep link supplied by the streaming lifecycle source for opening
+the title on the scoped provider. Null when no source evidence exists; it is
+never guessed from a title or provider name.
+{% enddocs %}
+
+{% docs col_fetched_at %}
+Timestamp when the immutable raw upstream response containing this record was
+fetched.
+{% enddocs %}
+
 {% docs col_source %}
 Source adapter that produced the normalized event.
 {% enddocs %}

@@ -32,6 +32,20 @@ Grain: one row per `event_id`.
 
 {% enddocs %}
 
+{% docs stg_streaming_links %}
+
+## Verified streaming deep-link staging
+
+Extracts HTTPS title links from retained Streaming Availability change
+responses and maps source service IDs to stable WatchPulse provider keys.
+Removed events are excluded so an explicitly removed option cannot supply a
+current destination.
+
+Grain: one row per content, region, provider, monetization type, event type,
+and event timestamp.
+
+{% enddocs %}
+
 {% docs stg_streaming_shows %}
 
 ## Streaming show metadata staging

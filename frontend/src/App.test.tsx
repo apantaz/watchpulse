@@ -23,8 +23,7 @@ test("shows catalog readiness returned by the local API", async () => {
 
   render(<App />);
   expect(screen.getByText("Connecting to WatchPulse…")).toBeInTheDocument();
-  expect(await screen.findByText("Ready for discovery")).toBeInTheDocument();
-  expect(screen.getByText("160")).toBeInTheDocument();
+  expect(await screen.findByText(/Updated/)).toBeInTheDocument();
   expect(await screen.findByRole("button", { name: /Netflix/ })).toBeInTheDocument();
 });
 

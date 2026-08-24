@@ -41,9 +41,23 @@ streaming services are loaded from the local API, and valid guest selections
 are remembered in browser-local storage without requiring an account.
 Type, genre, runtime, release-year, rating, and language filters use one typed
 state and the same query-parameter contract as every FastAPI discovery section.
+The Top 10 rail queries only FastAPI and renders reusable ranked poster cards.
+Poster artwork is loaded from TMDB's public image CDN using the ingested
+`poster_path`; this is an image asset request, not a TMDB API lookup, and it
+uses no API key or discovery quota. Missing or failed images have a local
+fallback.
 
 Vite reads `VITE_API_BASE_URL`; copy `.env.example` to `.env.local` only when
 the backend is not available at the default `http://127.0.0.1:8000` address.
+`VITE_TMDB_IMAGE_BASE_URL` configures the public poster CDN base path.
+`VITE_TMDB_PROVIDER_IMAGE_BASE_URL` configures the smaller provider-logo path.
+The four launch providers currently use an explicit frontend logo adapter;
+unknown providers receive a fallback. A later reference-ingestion increment
+will move `logo_path` into the provider dimension and API contract.
+Provider badges become external links only when the API returns a verified
+HTTPS `watch_url` retained from Streaming Availability. Unlinked badges mean
+availability is known but no authoritative title destination is currently
+stored; the frontend never guesses provider URLs.
 
 ## Quality commands
 

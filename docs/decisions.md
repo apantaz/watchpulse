@@ -314,6 +314,27 @@ Consequences:
 - authentication, server-side rendering, and a UI component framework are not
   introduced by this decision.
 
+## ADR-019: Expose only verified provider deep links
+
+- Status: accepted for v0.5
+- Date: 2026-08-24
+
+Decision: provider badges may open a title on its streaming platform only when
+WatchPulse retains an HTTPS `watch_url` supplied by Streaming Availability.
+Links are extracted from immutable raw change payloads, scoped by content,
+region, provider, and monetization type, and remain nullable throughout the
+warehouse and API. TMDB-only availability does not receive a guessed link.
+
+Why: provider search URLs and title-derived slugs are not reliable direct-title
+destinations. Presenting one as authoritative would weaken the local catalog's
+evidence rules and create broken or misleading navigation.
+
+Consequences: link coverage is initially partial and improves as lifecycle
+evidence is ingested. Removed events cannot supply a current destination. The
+frontend renders an external link only for validated HTTPS values, opens it in
+a separate tab with safe relationship attributes, and leaves other provider
+badges informational.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

@@ -52,3 +52,4 @@ class StreamingEvent:
     source: str
     source_event_id: str | None
     ingested_at: datetime
+    watch_url: str | None = None

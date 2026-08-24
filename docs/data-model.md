@@ -145,6 +145,7 @@ Grain: one row per content, region, provider, and monetization type.
 | `available_since` | timestamp/date | When current availability began |
 | `available_from` | timestamp/date | Future arrival time for upcoming rows |
 | `expires_on` | timestamp/date | Nullable expected removal time |
+| `watch_url` | text | Nullable verified HTTPS provider deep link; never inferred |
 | `is_available` | boolean | True only for current availability |
 | `is_upcoming` | boolean | True only for announced future availability |
 | `source` | text | Lifecycle source |
@@ -172,6 +173,7 @@ Grain: one distinct lifecycle event reported or derived by WatchPulse.
 | `event_date` | timestamp/date | Effective lifecycle time |
 | `available_from` | timestamp/date | Nullable announced arrival |
 | `expires_on` | timestamp/date | Nullable announced expiration |
+| `watch_url` | text | Nullable verified HTTPS provider deep link retained from source evidence |
 | `source` | text | Originating source |
 | `source_event_id` | text | Nullable upstream identity |
 | `ingested_at` | timestamp | WatchPulse receipt time |
@@ -224,7 +226,7 @@ It denormalizes fields needed by filters and title cards:
 tmdb_id, content_type, title, overview, release_date, release_year, runtime_minutes,
 original_language, genres, tmdb_rating, vote_count, popularity_score,
 region, provider_key, provider_name, monetization_type, available_since,
-available_from, expires_on, is_available, is_upcoming, poster_path,
+available_from, expires_on, watch_url, is_available, is_upcoming, poster_path,
 backdrop_path, metadata_source, availability_source, last_updated_at
 ```
 

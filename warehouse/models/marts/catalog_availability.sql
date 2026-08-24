@@ -25,6 +25,7 @@ select
     availability.available_since,
     availability.available_from,
     availability.expires_on,
+    availability.watch_url,
     availability.is_available,
     availability.is_upcoming,
     content.poster_path,

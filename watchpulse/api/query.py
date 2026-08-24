@@ -169,6 +169,12 @@ class DiscoveryQueryBuilder:
                 catalog.runtime_minutes,
                 catalog.original_language,
                 catalog.genre_ids,
+                coalesce((
+                    select list(genre.genre_name order by genre.genre_name)
+                    from main_marts.content_genres as genre
+                    where genre.tmdb_id = catalog.tmdb_id
+                      and genre.content_type = catalog.content_type
+                ), []) as genre_names,
                 catalog.tmdb_rating,
                 catalog.vote_count,
                 catalog.popularity_score,
@@ -186,7 +192,8 @@ class DiscoveryQueryBuilder:
                         expires_on := catalog.expires_on,
                         is_available := catalog.is_available,
                         is_upcoming := catalog.is_upcoming,
-                        source := catalog.availability_source
+                        source := catalog.availability_source,
+                        watch_url := catalog.watch_url
                     )
                     order by catalog.provider_name, catalog.provider_key,
                              catalog.monetization_type

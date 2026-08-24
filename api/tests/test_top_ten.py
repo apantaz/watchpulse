@@ -47,6 +47,7 @@ def _item(tmdb_id: int, title: str, popularity: float) -> CatalogItem:
         runtime_minutes=100,
         original_language="en",
         genre_ids=(35,),
+        genre_names=("Comedy",),
         tmdb_rating=7.5,
         vote_count=100,
         popularity_score=popularity,

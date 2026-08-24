@@ -149,3 +149,15 @@ export async function getNewReleases(
   );
   return response.items;
 }
+
+export async function getRecentlyAdded(
+  scope: CatalogScope,
+  filters: GlobalFilters,
+  signal?: AbortSignal,
+): Promise<CatalogItem[]> {
+  const response = await getJson<{ items: CatalogItem[] }>(
+    `/api/v1/discovery/recently-added?${discoveryParams(scope, filters)}`,
+    signal,
+  );
+  return response.items;
+}

@@ -173,6 +173,9 @@ Section loading, empty, failure, and retry behavior is explicit.
 The fifth increment adds the filter-reactive New Releases rail using content
 release dates, reuses the cinematic cards without ranking badges, and preserves
 independent loading, empty, failure, and retry behavior.
+The sixth increment adds Recently Added based on provider addition time rather
+than content release date, and extracts a reusable lifecycle rail for consistent
+loading, empty, failure, retry, and card behavior across the remaining sections.
 Verified provider deep links are retained from historical lifecycle payloads
 and exposed as optional safe card actions; TMDB-only rows remain unlinked
 rather than receiving guessed destinations.

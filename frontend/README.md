@@ -41,8 +41,9 @@ streaming services are loaded from the local API, and valid guest selections
 are remembered in browser-local storage without requiring an account.
 Type, genre, runtime, release-year, rating, and language filters use one typed
 state and the same query-parameter contract as every FastAPI discovery section.
-The Top 10 and New Releases rails query only FastAPI and render reusable poster
-cards; ranking badges remain specific to Top 10.
+The Top 10, New Releases, and Recently Added rails query only FastAPI and render
+reusable poster cards; ranking badges remain specific to Top 10. Recently Added
+uses provider addition time and remains distinct from content release recency.
 Poster artwork is loaded from TMDB's public image CDN using the ingested
 `poster_path`; this is an image asset request, not a TMDB API lookup, and it
 uses no API key or discovery quota. Missing or failed images have a local

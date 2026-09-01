@@ -396,6 +396,8 @@ python -m ingestion.run_streaming_availability --country GR
 This costs at most two requests with the default configuration. The client and
 event model still support `removed`, `updated`, and `expiring`, but those types
 and the Leaving Soon section are deferred beyond the first public release.
+WatchPulse cards and search results link explicitly to TMDB for richer title
+details instead of duplicating a full internal details page.
 
 Full pagination is opt-in and remains protected by the request ceiling:
 

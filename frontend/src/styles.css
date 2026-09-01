@@ -80,6 +80,7 @@ h2 { margin: 0; font: 700 22px Manrope, sans-serif; }
 .poster-frame::after { position: absolute; inset: auto 0 0; height: 35%; content: ""; background: linear-gradient(transparent, rgb(5 6 9 / 70%)); pointer-events: none; }
 .poster-description { position: absolute; z-index: 2; inset: auto 0 0; display: flex; min-height: 42%; padding: 52px 14px 14px; flex-direction: column; justify-content: flex-end; color: #e9e4ef; background: linear-gradient(transparent, rgb(8 7 11 / 94%) 46%); opacity: 0; transform: translateY(8px); transition: opacity 160ms ease 220ms, transform 160ms ease 220ms; pointer-events: none; }
 .poster-description > span { display: -webkit-box; overflow: hidden; font-size: 11px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.poster-description .tmdb-detail-cta { display: block; margin-top: 8px; overflow: visible; color: #d5a7ff; font-size: 10px; font-weight: 800; letter-spacing: .02em; -webkit-line-clamp: unset; }
 .poster-frame:hover .poster-description, .poster-frame:focus-visible .poster-description { opacity: 1; transform: translateY(0); }
 .poster-fallback { display: grid; place-items: center; color: #cdb1f5; background: radial-gradient(circle at 70% 20%, #604085, #21192d 55%, #13151b); }
 .poster-fallback span { font: 800 72px Manrope, sans-serif; opacity: .7; }
@@ -147,6 +148,7 @@ h2 { margin: 0; font: 700 22px Manrope, sans-serif; }
 .search-result-copy { display: grid; min-width: 0; gap: 2px; }
 .search-result-copy strong { overflow: hidden; font: 700 13px Manrope, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .search-result-copy small { overflow: hidden; color: #83858e; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.search-result-copy .search-tmdb-link { color: #b984e9; font-weight: 700; }
 .search-rating { display: inline-flex; min-width: 48px; align-items: center; justify-content: flex-end; gap: 4px; color: #f4c95d; font-size: 12px; font-weight: 800; }
 .search-rating > span { font-size: 13px; }
 .search-rating.unrated { color: #8b8d96; font-weight: 700; }

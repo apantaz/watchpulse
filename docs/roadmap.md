@@ -156,7 +156,7 @@ the [v0.4 release notes](releases/v0.4.md).
 
 Goal: deliver the complete deterministic user experience locally.
 
-Current status: **in progress (2026-08-23)**. React, TypeScript, and Vite are
+Current status: **release candidate (2026-09-01)**. React, TypeScript, and Vite are
 selected in ADR-018. The first increment establishes the responsive application
 shell, typed local API client, catalog readiness state, explicit development
 CORS policy, frontend tests, and CI build validation. The second increment adds
@@ -185,14 +185,18 @@ desktop filter sidebar, denser rails, and a responsive stacked mobile layout.
 Verified provider deep links are retained from historical lifecycle payloads
 and exposed as optional safe card actions; TMDB-only rows remain unlinked
 rather than receiving guessed destinations.
+Title cards and catalog search now identify TMDB as the canonical destination
+for richer title details. WatchPulse intentionally retains only the concise
+metadata needed to make a discovery decision. Leaving Soon remains deferred
+until reliable expiration ingestion is enabled rather than inferred.
 
 Scope:
 
 - choose and document the frontend framework;
 - region selector and region-aware provider selection;
 - type, genre, runtime, release-year, and rating filters;
-- responsive rails/cards for all five sections;
-- title details;
+- responsive rails/cards for Top 10, New Releases, Recently Added, and Upcoming;
+- explicit outbound TMDB title-details navigation;
 - browser-local guest preferences;
 - loading, empty, stale-data, and error states.
 
@@ -202,6 +206,11 @@ Exit criteria:
 - no login is required;
 - filter changes only query the WatchPulse backend;
 - mobile and desktop layouts are credible for a portfolio demonstration.
+
+Release exception: Leaving Soon was part of the original five-section target,
+but is intentionally excluded from v0.5 because expiration ingestion is not
+enabled. The existing backend endpoint remains evidence-only and returns no
+guessed departures.
 
 ## v0.6 — Automation and deployment
 

@@ -77,11 +77,10 @@ export function TitleCard({ item, rank, lifecycleDate }: TitleCardProps) {
             <span>{item.title.slice(0, 1)}</span>
           </div>
         )}
-        {item.overview && (
-          <span className="poster-description" aria-hidden="true">
-            <span>{item.overview}</span>
-          </span>
-        )}
+        <span className="poster-description" aria-hidden="true">
+          {item.overview && <span>{item.overview}</span>}
+          <span className="tmdb-detail-cta">View details on TMDB ↗</span>
+        </span>
         <span className={`rating${hasRating ? "" : " unrated"}`}>
           {hasRating ? `★ ${item.tmdb_rating!.toFixed(1)}` : "N/A"}
         </span>

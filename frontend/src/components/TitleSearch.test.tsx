@@ -44,6 +44,10 @@ test("searches the selected local catalog after two characters", async () => {
   expect(await screen.findByText("Monsters", {}, { timeout: 1500 })).toBeInTheDocument();
   expect(screen.getByText("Netflix")).toBeInTheDocument();
   expect(screen.getByText("7.2")).toHaveClass("search-rating");
+  expect(screen.getByRole("option", { name: "View details for Monsters on TMDB" })).toHaveAttribute(
+    "href",
+    "https://www.themoviedb.org/movie/42",
+  );
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
   const url = String(fetchMock.mock.calls[0][0]);
   expect(url).toContain("query=Mon");

@@ -65,6 +65,11 @@ test("shows total episodes for a currently available series", () => {
 
   expect(screen.getByText("1 season · 9 episodes", { exact: false })).toBeInTheDocument();
   expect(screen.getByText("★ 7.5")).toBeInTheDocument();
+  expect(screen.getByText("View details on TMDB ↗")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "View Current Series on TMDB" })).toHaveAttribute(
+    "href",
+    "https://www.themoviedb.org/tv/42",
+  );
   expect(screen.queryByText("50 min", { exact: false })).not.toBeInTheDocument();
   expect(screen.getByLabelText("Netflix; direct link unavailable")).toHaveAttribute(
     "data-tooltip",

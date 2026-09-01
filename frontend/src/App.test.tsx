@@ -32,6 +32,7 @@ test("shows catalog readiness returned by the local API", async () => {
     "href",
     "https://www.justwatch.com",
   );
+  expect(screen.queryByText(/title details arrive next/i)).not.toBeInTheDocument();
 });
 
 test("shows an honest error when the catalog is unavailable", async () => {

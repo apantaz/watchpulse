@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: install install-hooks api-dev catalog-refresh dbt-deps dbt-debug dbt-parse dbt-validate dbt-publish frontend-install frontend-dev frontend-lint frontend-test frontend-build frontend-ci lint precommit pre-commit prepush pre-push syntax test coverage ci
+.PHONY: install install-hooks api-dev catalog-refresh catalog-rebuild-clean dbt-deps dbt-debug dbt-parse dbt-validate dbt-publish frontend-install frontend-dev frontend-lint frontend-test frontend-build frontend-ci lint precommit pre-commit prepush pre-push syntax test coverage ci
 
 install:
 	$(PYTHON) -m pip install -e ".[dev,warehouse]"
@@ -13,6 +13,12 @@ api-dev:
 
 catalog-refresh:
 	$(PYTHON) -m ingestion.full_refresh --country GR --summary-output data/full-refresh-summary.json
+
+# Backs up data/lake and the DuckDB files, then runs a full TMDB backfill
+# from an empty lake. Interactive confirmation required; see the script for
+# what it backs up and why. Country defaults to GR: make catalog-rebuild-clean COUNTRY=GR
+catalog-rebuild-clean:
+	scripts/clean_rebuild.sh $(COUNTRY)
 
 frontend-install:
 	cd frontend && npm install

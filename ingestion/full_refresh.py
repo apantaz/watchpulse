@@ -170,12 +170,20 @@ def run_full_refresh(
     return summary
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser(settings: Settings) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--country", default="GR")
     parser.add_argument("--provider", action="append", dest="providers")
-    parser.add_argument("--streaming-max-requests", type=int, default=100)
-    parser.add_argument("--enrichment-max-titles", type=int, default=20_000)
+    parser.add_argument(
+        "--streaming-max-requests",
+        type=int,
+        default=settings.streaming_availability_max_requests_per_run,
+    )
+    parser.add_argument(
+        "--enrichment-max-titles",
+        type=int,
+        default=settings.tmdb_enrichment_max_titles_per_run,
+    )
     parser.add_argument(
         "--enrichment-mode", choices=("backfill", "incremental"), default="incremental"
     )
@@ -191,7 +199,7 @@ def main() -> int:
     logging.getLogger("httpx").setLevel(logging.WARNING)
     load_dotenv()
     settings = Settings.from_env()
-    args = build_parser().parse_args()
+    args = build_parser(settings).parse_args()
     providers = tuple(args.providers) if args.providers else settings.supported_providers
     summary = run_full_refresh(
         settings=settings,

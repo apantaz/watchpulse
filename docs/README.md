@@ -6,6 +6,8 @@ Each document has one primary responsibility:
 - [Data model](data-model.md): grains, keys, fields, history, and data tests.
 - [Decisions](decisions.md): append-only architecture decision records (ADRs).
 - [Roadmap](roadmap.md): version-by-version scope and exit criteria.
+- [Catalog refresh runbook](catalog-refresh-runbook.md): routine refreshes,
+  clean rebuilds, validation, publication, and recovery.
 - [Release notes](releases/): completed version outcomes and limitations.
 
 `../AGENTS.md` is the authoritative product brief. When implementation changes a

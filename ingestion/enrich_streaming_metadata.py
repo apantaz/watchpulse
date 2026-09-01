@@ -100,13 +100,18 @@ def run(
     event_type: str = "upcoming",
     country: str | None = None,
     max_titles: int | None = None,
+    include_watch_providers: bool = False,
     tmdb_base_url: str | None = None,
 ) -> dict[str, object]:
     metadata_refs = pending_title_refs(
         lake_root, event_type=event_type, country=country, endpoint="metadata"
     )
-    availability_refs = pending_title_refs(
-        lake_root, event_type=event_type, country=country, endpoint="watch_providers"
+    availability_refs = (
+        pending_title_refs(
+            lake_root, event_type=event_type, country=country, endpoint="watch_providers"
+        )
+        if include_watch_providers
+        else ()
     )
     if max_titles is not None:
         allowed = set(
@@ -176,6 +181,7 @@ def main() -> None:
     parser.add_argument("--event-type", choices=("new", "upcoming"), default="upcoming")
     parser.add_argument("--country")
     parser.add_argument("--max-titles", type=int)
+    parser.add_argument("--include-watch-providers", action="store_true")
     parser.add_argument("--lake-root", default=str(settings.lake_root))
     args = parser.parse_args()
     if args.max_titles is not None and args.max_titles <= 0:
@@ -188,6 +194,7 @@ def main() -> None:
         event_type=args.event_type,
         country=args.country,
         max_titles=args.max_titles,
+        include_watch_providers=args.include_watch_providers,
         tmdb_base_url=settings.tmdb_base_url,
     )
     logger.info("enrichment complete: %s", summary)

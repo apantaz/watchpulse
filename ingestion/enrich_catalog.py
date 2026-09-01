@@ -33,6 +33,7 @@ from watchpulse.pipeline_runs import PipelineRunRepository, sanitize_error
 logger = logging.getLogger("ingestion.enrich_catalog")
 EnrichmentMode = Literal["backfill", "incremental"]
 BATCH_SIZE = 25
+PROGRESS_LOG_INTERVAL_SECONDS = 60.0
 
 
 @dataclass(frozen=True)
@@ -263,6 +264,8 @@ def execute_enrichment(
     provider_records: list[RawRecord] = []
     metadata_written = 0
     providers_written = 0
+    titles_processed = 0
+    last_progress_at = started_at
     if runs:
         runs.start(run_id=run_id, job_name="tmdb_catalog_enrichment", source="tmdb")
     try:
@@ -296,6 +299,31 @@ def execute_enrichment(
                             endpoint="watch_providers",
                             run_id=run_id,
                         )
+                titles_processed += 1
+                now = time.monotonic()
+                if now - last_progress_at >= PROGRESS_LOG_INTERVAL_SECONDS:
+                    elapsed = now - started_at
+                    rate = source.request_count / elapsed if elapsed else 0.0
+                    remaining = len(plan) - titles_processed
+                    eta_seconds = (
+                        remaining / (titles_processed / elapsed) if titles_processed else 0
+                    )
+                    logger.info(
+                        "enrichment progress run_id=%s titles=%d/%d remaining=%d "
+                        "requests=%d request_rate=%.2f/s metadata_persisted=%d "
+                        "providers_persisted=%d elapsed_seconds=%.1f eta_seconds=%.1f",
+                        run_id,
+                        titles_processed,
+                        len(plan),
+                        remaining,
+                        source.request_count,
+                        rate,
+                        metadata_written,
+                        providers_written,
+                        elapsed,
+                        eta_seconds,
+                    )
+                    last_progress_at = now
             metadata_written += _write_batch(
                 metadata_records, lake_root=lake_root, endpoint="metadata", run_id=run_id
             )
@@ -309,6 +337,7 @@ def execute_enrichment(
             "run_id": run_id,
             "mode": mode,
             "titles_planned": len(plan),
+            "titles_processed": titles_processed,
             "metadata_records_written": metadata_written,
             "provider_records_written": providers_written,
             "api_request_count": source.request_count,
@@ -323,7 +352,7 @@ def execute_enrichment(
                 details=summary,
             )
         return summary
-    except Exception as error:
+    except BaseException as error:
         if runs:
             runs.fail(
                 run_id=run_id,

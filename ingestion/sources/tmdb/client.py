@@ -31,7 +31,11 @@ class TMDBSource(IngestionSource):
         base_url: str = TMDB_BASE_URL,
     ) -> None:
         self._api_key = api_key
-        self._client = http_client or RateLimitedClient(base_url=base_url, min_interval_seconds=0.3)
+        # Stay below TMDB's protective request ceiling. The client remains
+        # sequential and backs off automatically on 429/5xx.
+        self._client = http_client or RateLimitedClient(
+            base_url=base_url, min_interval_seconds=1 / 30
+        )
 
     def close(self) -> None:
         self._client.close()

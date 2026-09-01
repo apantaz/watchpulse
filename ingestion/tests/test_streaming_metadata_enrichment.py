@@ -80,7 +80,13 @@ def test_run_fetches_only_pending_lifecycle_metadata(tmp_path: Path, monkeypatch
         FakeTMDBSource,
     )
 
-    summary = run(lake_root=tmp_path, api_key="", country="GR", max_titles=1)
+    summary = run(
+        lake_root=tmp_path,
+        api_key="",
+        country="GR",
+        max_titles=1,
+        include_watch_providers=True,
+    )
 
     assert summary["metadata_titles_requested"] == 1
     assert summary["availability_titles_requested"] == 1

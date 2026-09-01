@@ -353,6 +353,28 @@ labels this as a new season without claiming a season number absent upstream.
 Browser requests never trigger enrichment, and each retained response type is
 skipped independently on subsequent runs.
 
+## ADR-021: Use TMDB as the title-details destination
+
+Status: Accepted (2026-09-01)
+
+WatchPulse owns the decision experience: region/provider availability, shared
+filters, discovery sections, and concise comparison metadata. For the first
+public release it does not reproduce a complete internal title-details page.
+Poster links and catalog-search results instead identify TMDB explicitly and
+open the canonical TMDB movie or TV page in a new tab.
+
+This keeps the product focused, gives users a clear destination for richer
+cast, crew, production, and related-title information, and sends appropriate
+traffic back to the free metadata service supporting WatchPulse. Cards may
+retain a short overview, year, genres, rating, and runtime/series totals when
+available because those fields directly support the discovery decision.
+
+Provider actions remain separate and continue to require verified HTTPS watch
+links under ADR-019. TMDB attribution remains visible in the site footer, and
+outbound labels must not imply that WatchPulse is endorsed or certified by
+TMDB. An internal details route may be reconsidered only if it creates distinct
+WatchPulse value rather than duplicating TMDB.
+
 ## Open decisions
 
 These remain unresolved and should receive new ADRs when decided:

@@ -92,7 +92,6 @@ export default function App() {
           {scope && scope.providers.length === 0 && (
             <p className="selection-prompt">Select at least one streaming service to start discovering titles.</p>
           )}
-          <p className="coming-next">Leaving Soon and title details arrive next.</p>
         </div>
       </div>
       <footer className="credits" aria-label="Credits">

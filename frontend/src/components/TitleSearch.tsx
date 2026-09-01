@@ -97,6 +97,7 @@ export function TitleSearch({ scope, filters }: Props) {
                 key={`${item.content_type}-${item.tmdb_id}`}
                 role="option"
                 aria-selected="false"
+                aria-label={`View details for ${item.title} on TMDB`}
                 href={`https://www.themoviedb.org/${item.content_type}/${item.tmdb_id}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -106,6 +107,7 @@ export function TitleSearch({ scope, filters }: Props) {
                   <strong>{item.title}</strong>
                   <small>{[item.release_year, item.genre_names.slice(0, 2).join(", ")].filter(Boolean).join(" · ")}</small>
                   <small>{item.availabilities.map((entry) => entry.provider_name).filter((name, index, names) => names.indexOf(name) === index).join(", ")}</small>
+                  <small className="search-tmdb-link">View details on TMDB ↗</small>
                 </span>
                 <span className={item.tmdb_rating && item.tmdb_rating > 0 ? "search-rating" : "search-rating unrated"}>
                   <span aria-hidden="true">★</span>{item.tmdb_rating && item.tmdb_rating > 0 ? item.tmdb_rating.toFixed(1) : "N/A"}

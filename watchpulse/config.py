@@ -68,10 +68,10 @@ class Settings:
                 "https://api.movieofthenight.com/v4",
             ),
             streaming_availability_max_requests_per_run=_positive_int(
-                values, "STREAMING_AVAILABILITY_MAX_REQUESTS_PER_RUN", 2
+                values, "STREAMING_AVAILABILITY_MAX_REQUESTS_PER_RUN", 80
             ),
             streaming_availability_monthly_cap=_positive_int(
-                values, "STREAMING_AVAILABILITY_MONTHLY_CAP", 800
+                values, "STREAMING_AVAILABILITY_MONTHLY_CAP", 900
             ),
             lake_root=Path(values.get("LAKE_ROOT", "data/lake")),
             database_path=Path(values.get("DATABASE_PATH", "data/warehouse.duckdb")),

@@ -343,7 +343,7 @@ def test_discovery_errors_are_validated_and_sanitized(tmp_path: Path) -> None:
     assert injection.status_code == 422
 
 
-def test_openapi_contains_the_complete_v04_contract(catalog_app: FastAPI) -> None:
+def test_openapi_contains_the_complete_v05_contract(catalog_app: FastAPI) -> None:
     schema = _get(catalog_app, "/openapi.json").json()
     required_paths = {
         "/health",
@@ -362,4 +362,4 @@ def test_openapi_contains_the_complete_v04_contract(catalog_app: FastAPI) -> Non
     }
 
     assert required_paths <= set(schema["paths"])
-    assert schema["info"]["version"] == "0.4.0"
+    assert schema["info"]["version"] == "0.5.0"

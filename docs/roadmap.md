@@ -156,7 +156,7 @@ the [v0.4 release notes](releases/v0.4.md).
 
 Goal: deliver the complete deterministic user experience locally.
 
-Current status: **release candidate (2026-09-01)**. React, TypeScript, and Vite are
+Current status: **complete (2026-09-01)**. React, TypeScript, and Vite are
 selected in ADR-018. The first increment establishes the responsive application
 shell, typed local API client, catalog readiness state, explicit development
 CORS policy, frontend tests, and CI build validation. The second increment adds
@@ -211,6 +211,11 @@ Release exception: Leaving Soon was part of the original five-section target,
 but is intentionally excluded from v0.5 because expiration ingestion is not
 enabled. The existing backend endpoint remains evidence-only and returns no
 guessed departures.
+
+Exit criteria result: passed for the accepted four-section release scope. The
+guest experience works end-to-end without login, all filters query only the
+local WatchPulse API, desktop/mobile layouts are validated, and title details
+lead explicitly to TMDB. See the [v0.5 release notes](releases/v0.5.md).
 
 ## v0.6 — Automation and deployment
 

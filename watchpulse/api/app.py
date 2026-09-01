@@ -24,7 +24,7 @@ def create_app(
 
     app = FastAPI(
         title="WatchPulse API",
-        version="0.4.0",
+        version="0.5.0",
         description="Read-only discovery over the locally published WatchPulse catalog.",
     )
     app.state.catalog_repository = catalog_repository

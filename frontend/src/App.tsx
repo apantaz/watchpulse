@@ -62,7 +62,7 @@ export default function App() {
         </a>
         {state.kind === "ready" ? (
           <span className="freshness"><span className="status-dot" />Updated {formatRefresh(state.status.freshness.latest_source_updated_at)}</span>
-        ) : <span className="version">v0.5 preview</span>}
+        ) : <span className="version">v0.5</span>}
       </nav>
       <div className="app-layout">
         <aside className="discovery-sidebar" aria-label="Discovery controls">

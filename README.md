@@ -5,14 +5,16 @@ watch based on their region, streaming services, and preferences. External APIs
 populate a local catalog; browsing and filter changes will query WatchPulse's
 own data rather than calling upstream APIs.
 
-The MVP provides region- and provider-aware discovery across five shared,
-filterable sections:
+The first-release UI provides region- and provider-aware discovery across four
+shared, filterable sections:
 
 - Top 10
 - New Releases
 - Recently Added
-- Leaving Soon
 - Upcoming
+
+The evidence-only Leaving Soon API remains available, but its UI section is
+deferred until expiration ingestion is enabled.
 
 See [AGENTS.md](AGENTS.md) for the current product requirements and
 [docs/architecture.md](docs/architecture.md) for the active architecture and
@@ -27,8 +29,7 @@ Documentation is split by responsibility:
 
 ## Project status
 
-Version `v0.4` is released and `v0.5` frontend discovery is in progress. The repository currently
-includes:
+Version `v0.5` is the current release. The repository includes:
 
 - configurable TMDB discovery by region and provider;
 - full movie and TV metadata ingestion;
@@ -52,14 +53,17 @@ includes:
 - scoped local title details with aggregated provider availability;
 - a responsive React frontend with region-aware provider selection and shared
   content type, genre, runtime, release-year, rating, and language filters;
-- a filter-reactive Top 10 rail with reusable ranked poster cards and explicit
-  loading, empty, failure, and retry states;
+- filter-reactive Top 10, New Releases, Recently Added, and Upcoming rails with
+  reusable poster cards and explicit loading, empty, failure, and retry states;
+- local title search that respects the active region, providers, and filters;
+- verified provider actions plus explicit outbound TMDB title-detail links;
+- bounded broad and priority-based incremental TMDB enrichment planning;
 - unit tests that do not make live API calls.
 
-Version `v0.4` adds a read-only FastAPI discovery backend, typed global filters,
-parameterized local queries, catalog reference/freshness routes, all five
-discovery sections, and scoped title details. See the
-[v0.4 release notes](docs/releases/v0.4.md).
+Version `v0.5` adds the complete local guest discovery interface, catalog
+search, Upcoming lifecycle presentation, TMDB/provider navigation, and
+intelligent enrichment planning. See the
+[v0.5 release notes](docs/releases/v0.5.md).
 
 Add `STREAMING_AVAILABILITY_API_KEY` only when running live lifecycle ingestion;
 offline tests and warehouse builds do not require it.

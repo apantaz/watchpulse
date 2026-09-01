@@ -196,6 +196,46 @@ The command independently skips title IDs with retained metadata or provider
 responses and reports its bounded
 TMDB request count, and makes no Streaming Availability requests.
 
+## Full catalog refresh
+
+Run the complete Greece refresh for Netflix, Disney+, Prime Video, and Apple TV+:
+
+```bash
+make catalog-refresh
+```
+
+The guarded workflow performs complete TMDB movie/TV discovery, publishes a
+validated catalog snapshot, ingests all pages of Streaming Availability `new`
+and `upcoming` changes within a 100-request run budget, incrementally enriches
+missing/stale TMDB metadata, then atomically publishes the final DuckDB. Broad
+watch-provider enrichment is opt-in. The previous serving database remains live
+if discovery, dbt validation, or candidate publication fails.
+
+Every discovery page belongs to a run manifest. dbt selects only the latest
+complete run for each region/provider/content-type combination, so samples and
+interrupted refreshes never leak into the frontend. A title absent from the
+newest complete snapshot is no longer considered currently available.
+
+Useful bounded variants:
+
+```bash
+# Current catalog only; no lifecycle or per-title enrichment.
+python -m ingestion.full_refresh --country GR --skip-streaming --skip-enrichment
+
+# Clean metadata backfill after discovery; provider payloads remain disabled.
+python -m ingestion.full_refresh --country GR --enrichment-mode backfill
+
+# Explicit exceptional provider enrichment.
+python -m ingestion.full_refresh --country GR --include-watch-providers
+
+# Refresh one provider while preserving the latest complete snapshots of the others.
+python -m ingestion.full_refresh --country GR --provider netflix
+```
+
+The default full-refresh summary is retained locally at
+`data/full-refresh-summary.json`. Streaming request usage is also recorded in
+the operational DuckDB and constrained by the configured monthly cap.
+
 ## Dependency management
 
 `pyproject.toml` is the canonical project configuration. It contains package
@@ -341,6 +381,10 @@ Add `--metadata-only` to skip watch-provider payloads. Add
 `--plan-output data/enrichment-plan.json` to save the complete local plan for
 inspection. Planning never calls TMDB; only execution does. Completed batches
 are retained as immutable Parquet files, allowing later plans to resume.
+
+See the [catalog refresh runbook](docs/catalog-refresh-runbook.md) for the
+twice-weekly operating flow, clean rebuild procedure, diagrams, success gates,
+request expectations, and recovery commands.
 
 To override the configured regions for one run, repeat `--country`:
 

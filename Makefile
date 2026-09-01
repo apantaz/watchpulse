@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: install install-hooks api-dev dbt-deps dbt-debug dbt-parse dbt-validate dbt-publish frontend-install frontend-dev frontend-lint frontend-test frontend-build frontend-ci lint precommit pre-commit prepush pre-push syntax test coverage ci
+.PHONY: install install-hooks api-dev catalog-refresh dbt-deps dbt-debug dbt-parse dbt-validate dbt-publish frontend-install frontend-dev frontend-lint frontend-test frontend-build frontend-ci lint precommit pre-commit prepush pre-push syntax test coverage ci
 
 install:
 	$(PYTHON) -m pip install -e ".[dev,warehouse]"
@@ -10,6 +10,9 @@ install-hooks:
 
 api-dev:
 	uvicorn watchpulse.api:create_app --factory --reload
+
+catalog-refresh:
+	$(PYTHON) -m ingestion.full_refresh --country GR --summary-output data/full-refresh-summary.json
 
 frontend-install:
 	cd frontend && npm install

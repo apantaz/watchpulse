@@ -84,6 +84,21 @@ candidates as (
     select * from streaming_candidates
 ),
 
+latest_tmdb_volatile_fields as (
+    select
+        tmdb_id,
+        content_type,
+        arg_max(tmdb_rating, source_updated_at)
+            filter (where tmdb_rating is not null) as tmdb_rating,
+        arg_max(vote_count, source_updated_at)
+            filter (where vote_count is not null) as vote_count,
+        arg_max(tmdb_popularity, source_updated_at)
+            filter (where tmdb_popularity is not null) as tmdb_popularity
+    from candidates
+    where metadata_source = 'tmdb'
+    group by 1, 2
+),
+
 ranked as (
     select
         *,
@@ -98,28 +113,35 @@ ranked as (
             partition by tmdb_id, content_type
         ) as last_observed_at
     from candidates
+),
+
+selected as (
+    select *
+    from ranked
+    where observation_rank = 1
 )
 
 select
-    tmdb_id,
-    content_type,
-    title,
-    original_title,
-    overview,
-    release_date,
-    release_year,
-    runtime_minutes,
-    episode_count,
-    season_count,
-    genre_ids,
-    original_language,
-    tmdb_rating,
-    vote_count,
-    tmdb_popularity,
-    poster_path,
-    backdrop_path,
-    metadata_source,
-    first_observed_at,
-    last_observed_at as source_updated_at
-from ranked
-where observation_rank = 1
+    selected.tmdb_id,
+    selected.content_type,
+    selected.title,
+    selected.original_title,
+    selected.overview,
+    selected.release_date,
+    selected.release_year,
+    selected.runtime_minutes,
+    selected.episode_count,
+    selected.season_count,
+    selected.genre_ids,
+    selected.original_language,
+    coalesce(volatile.tmdb_rating, selected.tmdb_rating) as tmdb_rating,
+    coalesce(volatile.vote_count, selected.vote_count) as vote_count,
+    coalesce(volatile.tmdb_popularity, selected.tmdb_popularity) as tmdb_popularity,
+    selected.poster_path,
+    selected.backdrop_path,
+    selected.metadata_source,
+    selected.first_observed_at,
+    selected.last_observed_at as source_updated_at
+from selected
+left join latest_tmdb_volatile_fields as volatile
+    using (tmdb_id, content_type)

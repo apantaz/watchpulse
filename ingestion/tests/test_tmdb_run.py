@@ -1,4 +1,7 @@
+import json
 from pathlib import Path
+
+import duckdb
 
 from ingestion.core.lake import RawRecord
 from ingestion.run import run
@@ -79,6 +82,17 @@ def test_discovery_only_is_default_and_reports_complete_query(tmp_path: Path, mo
             "truncated_by_source_limit": False,
         }
     ]
+    manifests = list(
+        (tmp_path / "lake").glob("raw/source=tmdb/endpoint=discovery_manifest/**/*.parquet")
+    )
+    assert len(manifests) == 1
+    payload = json.loads(
+        duckdb.connect()
+        .execute("select cast(payload as json) from read_parquet(?)", [[str(manifests[0])]])
+        .fetchone()[0]
+    )
+    assert payload["run_id"] == summary["run_id"]
+    assert payload["discovery_complete"] is True
 
 
 def test_bounded_discovery_is_partial_and_enrichment_is_opt_in(tmp_path: Path, monkeypatch) -> None:

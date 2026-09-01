@@ -22,7 +22,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from ingestion.core.lake import write_raw_batch
+from ingestion.core.lake import RawRecord, write_raw_batch
 from ingestion.sources.tmdb.client import TMDBSource
 from ingestion.sources.tmdb.config import (
     DEFAULT_COUNTRIES,
@@ -194,6 +194,28 @@ def run(
             "metadata_records_written": metadata_written,
             "availability_records_written": availability_written,
         }
+        # The manifest is the publication contract for discovery snapshots.
+        # dbt only promotes provider/content combinations marked complete here;
+        # raw pages from interrupted or deliberately bounded runs stay auditable
+        # without accidentally becoming the live catalog.
+        write_raw_batch(
+            [
+                RawRecord(
+                    request_params={"run_id": run_id},
+                    payload={
+                        "run_id": run_id,
+                        "discovery_complete": summary["discovery_complete"],
+                        "queries": discovery_queries,
+                    },
+                )
+            ],
+            lake_root=lake_root,
+            source="tmdb",
+            endpoint="discovery_manifest",
+            entity_type="catalog",
+            country="ALL",
+            run_id=run_id,
+        )
         if runs:
             runs.succeed(
                 run_id=run_id,
@@ -230,6 +252,12 @@ def main() -> None:
         help="ISO2 country code; repeatable. Defaults to configured launch countries.",
     )
     parser.add_argument(
+        "--provider",
+        action="append",
+        dest="providers",
+        help="Configured provider key; repeatable. Defaults to all configured providers.",
+    )
+    parser.add_argument(
         "--enrich",
         action="store_true",
         help="Fetch full metadata and watch-provider payloads for every discovered title.",
@@ -251,13 +279,14 @@ def main() -> None:
         raise SystemExit("TMDB_API_KEY is not set. Copy .env.example to .env and fill it in.")
 
     countries = tuple(args.countries) if args.countries else settings.supported_regions
-    unknown_providers = set(settings.supported_providers) - PROVIDERS.keys()
+    selected_providers = tuple(args.providers) if args.providers else settings.supported_providers
+    unknown_providers = set(selected_providers) - PROVIDERS.keys()
     if unknown_providers:
         raise SystemExit(
             "SUPPORTED_PROVIDERS contains unknown provider keys: "
             + ", ".join(sorted(unknown_providers))
         )
-    providers = {key: PROVIDERS[key] for key in settings.supported_providers}
+    providers = {key: PROVIDERS[key] for key in selected_providers}
 
     run(
         lake_root=Path(args.lake_root),

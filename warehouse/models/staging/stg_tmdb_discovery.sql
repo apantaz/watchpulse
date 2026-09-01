@@ -3,6 +3,7 @@
 with raw_pages as (
     select
         filename as source_file,
+        regexp_extract(filename, 'part-([^-]+)-', 1) as run_id,
         cast(fetched_at as timestamptz) as fetched_at,
         entity_type as content_type,
         upper(country) as region,
@@ -14,6 +15,23 @@ with raw_pages as (
         hive_partitioning = true,
         union_by_name = true
     )
+),
+
+latest_complete_snapshots as (
+    select run_id, region, provider_key, content_type
+    from {{ ref('stg_tmdb_discovery_snapshots') }}
+    where is_complete and not truncated_by_source_limit
+    qualify row_number() over (
+        partition by region, provider_key, content_type
+        order by completed_at desc, run_id desc
+    ) = 1
+),
+
+published_pages as (
+    select raw_pages.*
+    from raw_pages
+    inner join latest_complete_snapshots
+        using (run_id, region, provider_key, content_type)
 ),
 
 flattened as (
@@ -46,7 +64,7 @@ flattened as (
         json_extract_string(result.value, '$.backdrop_path') as backdrop_path,
         fetched_at as source_updated_at,
         source_file
-    from raw_pages,
+    from published_pages,
         json_each(json_extract(payload, '$.results')) as result
 )
 

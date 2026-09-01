@@ -1,6 +1,36 @@
 version: 2
 
 models:
+  - name: stg_tmdb_discovery_snapshots
+    description: Complete and partial TMDB discovery-query manifests used to select live snapshots.
+    meta:
+      owner: watchpulse
+      source: tmdb
+      grain: one row per run, region, provider, and content type
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [run_id, region, provider_key, content_type]
+    columns:
+      - {name: run_id, description: Ingestion run identifier., data_type: varchar, tests: [not_null]}
+      - {name: completed_at, description: Time the discovery manifest was retained., data_type: timestamptz, tests: [not_null]}
+      - {name: region, description: "{{ doc('col_region') }}", data_type: varchar, tests: [not_null]}
+      - {name: provider_key, description: "{{ doc('col_provider_key') }}", data_type: varchar, tests: [not_null]}
+      - name: content_type
+        description: "{{ doc('col_content_type') }}"
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [movie, tv]
+      - {name: upstream_total_pages, description: Pages reported by TMDB., data_type: integer, tests: [not_null]}
+      - {name: expected_pages, description: Pages required within the source ceiling., data_type: integer, tests: [not_null]}
+      - {name: pages_fetched, description: Pages retained by WatchPulse., data_type: integer, tests: [not_null]}
+      - {name: total_results, description: Results reported by TMDB., data_type: integer, tests: [not_null]}
+      - {name: is_complete, description: Whether all expected pages were retained., data_type: boolean, tests: [not_null]}
+      - {name: truncated_by_source_limit, description: Whether the TMDB 500-page ceiling prevented completeness., data_type: boolean, tests: [not_null]}
+
   - name: stg_tmdb_watch_providers
     description: "{{ doc('stg_tmdb_watch_providers') }}"
     meta:
